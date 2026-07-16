@@ -26,28 +26,28 @@ export const SIM_DEFAULTS = Object.freeze({
 });
 
 /**
- * Simulate one genome and return its result.
+ * Create a resumable simulation. A single car can cost anywhere from 5ms to
+ * 250ms depending on how many contacts it generates, so the caller — not this
+ * module — decides how much to run at a time; that is what lets the page
+ * compute 40 generations without ever blocking a frame.
  * @param {object} genome
  * @param {object} track
  * @param {object} [options]
  * @param {boolean} [options.recordFrames] - capture per-tick poses for replay.
- *   Off by default: a 40-generation evolution run would otherwise retain
- *   millions of pose objects.
- * @returns {{fitness: number, distance: number, finished: boolean, failed: boolean,
- *            failReason: string|null, ticks: number, frames: object[]|null}}
+ *   Off by default: a 40-generation run would otherwise retain millions of poses.
+ * @returns {{step: (n?: number) => boolean, done: boolean, result: object, car: object}}
  */
-export function simulateGenome(genome, track, options = {}) {
+export function createSimulation(genome, track, options = {}) {
   if (!isValidTrack(track)) {
-    throw new TypeError('simulateGenome: track is not valid; validate it before simulating');
+    throw new TypeError('createSimulation: track is not valid; validate it before simulating');
   }
   const config = { ...SIM_DEFAULTS, ...options };
   const recordFrames = Boolean(options.recordFrames);
 
   const engine = Engine.create();
   engine.gravity.y = config.gravityY;
-  // Fixed sub-stepping and a fixed delta keep the run bit-reproducible.
+  // A fixed delta and no wall-clock input keep the run bit-reproducible.
   engine.timing.timeScale = 1;
-
   Composite.add(engine.world, buildTerrain(track, config));
 
   const startY = heightAt(track, config.startX) - lowestOffset(genome) - config.startGap;
@@ -57,62 +57,96 @@ export function simulateGenome(genome, track, options = {}) {
   const goal = finishX(track);
   const frames = recordFrames ? [] : null;
 
-  let distance = 0;
-  let failed = false;
-  let failReason = null;
-  let finished = false;
-  let ticks = 0;
-  let lastProgressTick = 0;
-  let lastProgressX = 0;
+  const state = {
+    distance: 0,
+    failed: false,
+    failReason: null,
+    finished: false,
+    ticks: 0,
+    done: false,
+    lastProgressTick: 0,
+    lastProgressX: 0,
+  };
 
-  for (; ticks < config.maxTicks; ticks += 1) {
+  function tick() {
     applyMotor(car);
     Engine.update(engine, config.timestep);
+    state.ticks += 1;
 
     if (hasNaNPosition(car)) {
       // A blown-up constraint would otherwise poison fitness with NaN and make
       // the whole population incomparable.
-      failed = true;
-      failReason = 'exploded';
-      break;
+      finish('exploded', true);
+      return;
     }
 
     const x = car.chassis.position.x - config.startX;
-    if (x > distance) distance = x;
-    if (recordFrames) frames.push(captureFrame(car, ticks));
+    if (x > state.distance) state.distance = x;
+    if (recordFrames) frames.push(captureFrame(car, state.ticks - 1));
 
     if (chassisTilt(car) >= config.flipAngle) {
-      failed = true;
-      failReason = 'flipped';
-      break;
+      finish('flipped', true);
+      return;
     }
     if (car.chassis.position.x >= goal) {
-      finished = true;
-      break;
+      state.finished = true;
+      state.done = true;
+      return;
     }
-    if (x > lastProgressX + config.stallDistance) {
-      lastProgressX = x;
-      lastProgressTick = ticks;
-    } else if (ticks - lastProgressTick > config.stallTicks) {
-      failReason = 'stalled';
-      break;
+    if (x > state.lastProgressX + config.stallDistance) {
+      state.lastProgressX = x;
+      state.lastProgressTick = state.ticks;
+    } else if (state.ticks - state.lastProgressTick > config.stallTicks) {
+      finish('stalled', false);
+      return;
     }
+    if (state.ticks >= config.maxTicks) state.done = true;
   }
 
-  // Fitness is exactly the furthest the chassis got. A flip stops the clock, so
-  // a car that topples forward scores only the ground it covered upright — the
-  // degenerate "fall over once" strategy earns nothing extra.
-  const fitness = round6(Math.max(0, distance));
+  function finish(reason, failed) {
+    state.failReason = reason;
+    state.failed = failed;
+    state.done = true;
+  }
 
   return {
-    fitness,
-    distance: fitness,
-    finished,
-    failed,
-    failReason,
-    ticks: ticks + 1,
-    frames,
+    car,
+    get done() {
+      return state.done;
+    },
+    /** Advance up to n ticks; returns true once the run is over. */
+    step(n = 1) {
+      for (let i = 0; i < n && !state.done; i += 1) tick();
+      return state.done;
+    },
+    get result() {
+      // Fitness is exactly the furthest the chassis got. A flip stops the
+      // clock, so a car that topples forward scores only the ground it covered
+      // upright — the degenerate "fall over once" strategy earns nothing extra.
+      const fitness = round6(Math.max(0, state.distance));
+      return {
+        fitness,
+        distance: fitness,
+        finished: state.finished,
+        failed: state.failed,
+        failReason: state.failReason,
+        ticks: state.ticks,
+        frames,
+      };
+    },
   };
+}
+
+/**
+ * Simulate one genome to completion and return its result.
+ * @returns {{fitness: number, distance: number, finished: boolean, failed: boolean,
+ *            failReason: string|null, ticks: number, frames: object[]|null}}
+ */
+export function simulateGenome(genome, track, options = {}) {
+  const sim = createSimulation(genome, track, options);
+  const config = { ...SIM_DEFAULTS, ...options };
+  sim.step(config.maxTicks);
+  return sim.result;
 }
 
 /** Simulate and keep the per-tick poses, for replaying a single car. */
