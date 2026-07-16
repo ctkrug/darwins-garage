@@ -25,6 +25,27 @@ export function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+// Genomes live on a fixed grid: whole pixels for geometry, three decimals for
+// torque. This is what makes a share link lossless — physics is chaotic, so a
+// link that rounded coordinates on the way out would replay a visibly different
+// run from the one that was scored. Quantizing at the source instead means the
+// encoded car IS the car. The grid is far finer than the mutation jitter, so it
+// costs the search nothing.
+// Math.round(-0.3) is -0, which survives JSON, compares unequal to 0 under
+// Object.is, and would make a decoded genome differ from its original over a
+// value that means nothing. Collapse it.
+function unsignZero(value) {
+  return value === 0 ? 0 : value;
+}
+
+export function quantizeLength(value) {
+  return unsignZero(Math.round(value));
+}
+
+export function quantizeTorque(value) {
+  return unsignZero(Math.round(value * 1000) / 1000);
+}
+
 /**
  * Build a random genome from a seeded rng.
  * Chassis vertices are laid out around a circle with per-vertex jitter, which
@@ -52,7 +73,9 @@ export function createRandomGenome(rng) {
     torque: randomFloat(rng, GENOME_LIMITS.minTorque, GENOME_LIMITS.maxTorque),
   }));
 
-  return { chassis, wheels };
+  // Normalized on the way out so every genome in the system — random, bred, or
+  // decoded from a link — is already on the canonical grid.
+  return normalizeGenome({ chassis, wheels });
 }
 
 /**
@@ -85,11 +108,15 @@ export function normalizeGenome(genome) {
     .slice(0, GENOME_LIMITS.maxWheels)
     .map((w) => ({
       vertexIndex: clamp(Math.round(w.vertexIndex), 0, nextChassis.length - 1),
-      radius: clamp(w.radius, GENOME_LIMITS.minWheelRadius, GENOME_LIMITS.maxWheelRadius),
-      torque: clamp(
-        Number.isFinite(w.torque) ? w.torque : GENOME_LIMITS.minTorque,
-        GENOME_LIMITS.minTorque,
-        GENOME_LIMITS.maxTorque,
+      radius: quantizeLength(
+        clamp(w.radius, GENOME_LIMITS.minWheelRadius, GENOME_LIMITS.maxWheelRadius),
+      ),
+      torque: quantizeTorque(
+        clamp(
+          Number.isFinite(w.torque) ? w.torque : GENOME_LIMITS.minTorque,
+          GENOME_LIMITS.minTorque,
+          GENOME_LIMITS.maxTorque,
+        ),
       ),
     }));
   if (nextWheels.length < GENOME_LIMITS.minWheels) {
@@ -123,12 +150,15 @@ function clampVertex(point) {
   const distance = Math.hypot(point.x, point.y);
   const { minVertexRadius, maxVertexRadius } = GENOME_LIMITS;
   if (distance >= minVertexRadius && distance <= maxVertexRadius) {
-    return { x: point.x, y: point.y };
+    return { x: quantizeLength(point.x), y: quantizeLength(point.y) };
   }
   // A vertex at the origin has no direction to push out along; nudge it right.
   const angle = distance === 0 ? 0 : Math.atan2(point.y, point.x);
   const target = clamp(distance, minVertexRadius, maxVertexRadius);
-  return { x: Math.cos(angle) * target, y: Math.sin(angle) * target };
+  return {
+    x: quantizeLength(Math.cos(angle) * target),
+    y: quantizeLength(Math.sin(angle) * target),
+  };
 }
 
 function assertRng(rng, caller) {
