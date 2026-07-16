@@ -85,7 +85,9 @@ export function createRenderer(canvas) {
     const s = scale();
     return {
       x: (x - camera.x) * s + width / 2,
-      y: (y - camera.y) * s + height * 0.62,
+      // The car rides low in the frame: it leaves room to see the climb ahead
+      // without leaving a dead sea of empty sky above it.
+      y: (y - camera.y) * s + height * 0.74,
     };
   }
 
@@ -100,20 +102,30 @@ export function createRenderer(canvas) {
     ctx.fillRect(0, 0, width, height);
   }
 
-  /** Faint vertical bay markings that parallax with the camera. */
+  /**
+   * Bay markings and distance posts, parallaxed at half camera speed. They give
+   * the scene depth and — more usefully — make the car's speed legible when the
+   * camera is tracking it and the car itself looks stationary.
+   */
   function drawBayMarks() {
     const s = scale();
     const spacing = 500;
     ctx.save();
-    ctx.strokeStyle = 'rgba(107, 97, 82, 0.16)';
-    ctx.lineWidth = 2;
-    const start = Math.floor((camera.x - worldWidth()) / spacing) * spacing;
-    for (let x = start; x < camera.x + worldWidth(); x += spacing) {
-      const sx = (x - camera.x) * s + width / 2;
+    const start = Math.floor((camera.x - worldWidth() * 2) / spacing) * spacing;
+    for (let x = start; x < camera.x + worldWidth() * 2; x += spacing) {
+      // Half-speed parallax: distant scenery, not painted on the terrain.
+      const sx = (x - camera.x * 0.5) * s + width / 2;
+      if (sx < -40 || sx > width + 40) continue;
+      ctx.strokeStyle = 'rgba(107, 97, 82, 0.14)';
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(sx, 0);
       ctx.lineTo(sx, height);
       ctx.stroke();
+
+      ctx.fillStyle = 'rgba(107, 97, 82, 0.3)';
+      ctx.font = '600 11px "IBM Plex Mono", ui-monospace, monospace';
+      ctx.fillText(`${Math.round(x / 10)}m`, sx + 6, 18);
     }
     ctx.restore();
   }
