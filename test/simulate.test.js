@@ -4,7 +4,7 @@ import { createRng } from '../src/rng.js';
 import { createRandomGenome } from '../src/genome.js';
 import { createDefaultTrack, finishX } from '../src/track.js';
 import { simulateGenome, replayGenome, createSimulation, buildTerrain, SIM_DEFAULTS } from '../src/simulate.js';
-import { buildCar, hasNaNPosition } from '../src/car.js';
+import { buildCar, hasNaNPosition, chassisOutline, wheelAnchors } from '../src/car.js';
 
 const track = createDefaultTrack();
 const genomeFor = (seed) => createRandomGenome(createRng(seed));
@@ -219,4 +219,47 @@ test('torque is what moves the car, monotonically at low speeds', () => {
   // in torque across the whole gene range.
   assert.ok(drive(0.04) > drive(0.02));
   assert.ok(drive(0.02) > drive(0));
+});
+
+test('chassisOutline returns a body-local hull centred on the centre of mass', () => {
+  const outline = chassisOutline(goodCar());
+  assert.ok(outline.length >= 3);
+  const cx = outline.reduce((s, p) => s + p.x, 0) / outline.length;
+  const cy = outline.reduce((s, p) => s + p.y, 0) / outline.length;
+  // Vertex mean is not the area centroid, but both sit near the origin once the
+  // outline is expressed relative to the centre of mass.
+  assert.ok(Math.abs(cx) < 40 && Math.abs(cy) < 40, `outline off-centre at ${cx},${cy}`);
+  assert.ok(outline.every((p) => Number.isFinite(p.x) && Number.isFinite(p.y)));
+});
+
+test('chassisOutline matches the hull the physics body actually uses', () => {
+  // If the drawing and the physics disagreed, cars would visibly clip terrain.
+  const genome = genomeFor(6);
+  const outline = chassisOutline(genome);
+  const car = buildCar(genome, { x: 0, y: 0 });
+  assert.equal(outline.length, car.chassis.vertices.length);
+  for (const point of outline) {
+    const match = [...car.chassis.vertices].some(
+      (v) => Math.abs(v.x - point.x) < 1e-6 && Math.abs(v.y - point.y) < 1e-6,
+    );
+    assert.ok(match, `outline point ${point.x},${point.y} is not a body vertex`);
+  }
+});
+
+test('wheelAnchors gives one positioned wheel per genome wheel', () => {
+  const genome = genomeFor(6);
+  const anchors = wheelAnchors(genome);
+  assert.equal(anchors.length, genome.wheels.length);
+  const car = buildCar(genome, { x: 0, y: 0 });
+  anchors.forEach((anchor, i) => {
+    assert.equal(anchor.radius, genome.wheels[i].radius);
+    // The anchor is where buildCar actually put the wheel body.
+    assert.ok(Math.abs(anchor.x - car.wheels[i].body.position.x) < 1e-6);
+    assert.ok(Math.abs(anchor.y - car.wheels[i].body.position.y) < 1e-6);
+  });
+});
+
+test('chassisOutline and wheelAnchors reject an invalid genome', () => {
+  assert.throws(() => chassisOutline({ chassis: [], wheels: [] }), Error);
+  assert.throws(() => wheelAnchors(null), Error);
 });
