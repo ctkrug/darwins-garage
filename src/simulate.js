@@ -11,13 +11,13 @@ const { Engine, Composite, Bodies } = Matter;
 
 export const SIM_DEFAULTS = Object.freeze({
   timestep: 1000 / 60,
-  maxTicks: 1500,
+  maxTicks: 1200,
   // Past this tilt the chassis is on its side or roof and is done: scoring it
   // any further would reward cars that topple forward across the line.
   flipAngle: (Math.PI * 2) / 3,
   // A car that has gained under stallDistance px over stallTicks has stopped;
   // ending early keeps a 40-generation run inside its time budget.
-  stallTicks: 150,
+  stallTicks: 100,
   stallDistance: 10,
   startX: 0,
   startGap: 6,
