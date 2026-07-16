@@ -54,15 +54,15 @@ test('simulateGenome never yields NaN fitness, even for junk genomes', () => {
 });
 
 test('simulateGenome caps a flipped car at the distance it had when it flipped', () => {
-  // Seed 0 is a genome that reliably rolls over on the default track.
-  const result = simulateGenome(genomeFor(0), track);
+  // Seed 3 is a genome that reliably rolls over on the default track.
+  const result = simulateGenome(genomeFor(3), track);
   assert.equal(result.failReason, 'flipped');
   assert.equal(result.failed, true);
   assert.ok(result.ticks < SIM_DEFAULTS.maxTicks, 'a flip should stop the run early');
 
   // The cap is what stops a car being credited for ground covered after it has
   // already rolled: allowed to keep going, the same genome travels further.
-  const uncapped = simulateGenome(genomeFor(0), track, { flipAngle: Math.PI });
+  const uncapped = simulateGenome(genomeFor(3), track, { flipAngle: Math.PI });
   assert.ok(
     uncapped.fitness > result.fitness,
     `flip cap should bound fitness: capped ${result.fitness}, uncapped ${uncapped.fitness}`,
