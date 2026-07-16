@@ -1,12 +1,157 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <base href="./" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Darwin's Garage</title>
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="Watch a population of randomly-shaped vehicles evolve into fast, working cars via a real genetic algorithm and live 2D physics."
+    />
+    <meta name="theme-color" content="#2b2620" />
+    <title>Darwin's Garage — evolve a car out of scrap</title>
+
+    <!-- Favicon drawn in code: a safety-yellow gear on rust-orange, matching the
+         wordmark's gear glyph. No binary asset, no default globe. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d5541a'/%3E%3Cg fill='%23e8b400'%3E%3Ccircle cx='16' cy='16' r='7.5'/%3E%3Crect x='14' y='2' width='4' height='6' rx='1'/%3E%3Crect x='14' y='24' width='4' height='6' rx='1'/%3E%3Crect x='2' y='14' width='6' height='4' rx='1'/%3E%3Crect x='24' y='14' width='6' height='4' rx='1'/%3E%3C/g%3E%3Ccircle cx='16' cy='16' r='3' fill='%232b2620'/%3E%3C/svg%3E"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bungee&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <canvas id="scene"></canvas>
+    <div class="shell">
+      <header class="masthead">
+        <h1 class="wordmark">
+          <span class="wordmark__line">Darwin's</span>
+          <span class="wordmark__line">
+            <span aria-hidden="true">Gara</span>
+            <span class="wordmark__gear" aria-hidden="true">
+              <svg viewBox="0 0 32 32" focusable="false">
+                <g fill="currentColor">
+                  <circle cx="16" cy="16" r="8.5" />
+                  <rect x="13.6" y="1" width="4.8" height="7" rx="1.2" />
+                  <rect x="13.6" y="24" width="4.8" height="7" rx="1.2" />
+                  <rect x="1" y="13.6" width="7" height="4.8" rx="1.2" />
+                  <rect x="24" y="13.6" width="7" height="4.8" rx="1.2" />
+                </g>
+                <circle cx="16" cy="16" r="3.4" fill="var(--surface-2)" />
+              </svg>
+            </span>
+            <span aria-hidden="true">e</span>
+            <span class="sr-only">Garage</span>
+          </span>
+        </h1>
+        <p class="tagline">
+          Twenty-four piles of scrap. No design, no plan — just selection, crossover, and
+          mutation. Drag the generation slider and watch junk teach itself to climb.
+        </p>
+        <div class="masthead__tools">
+          <button id="mute" class="btn btn--icon" type="button" aria-pressed="false">
+            <span id="mute-glyph" aria-hidden="true">🔊</span>
+            <span class="sr-only">Mute sound effects</span>
+          </button>
+        </div>
+      </header>
+
+      <div id="share-error" class="banner banner--error" role="alert" hidden></div>
+
+      <main class="bay">
+        <section class="viewport" aria-label="Simulation viewport">
+          <canvas id="scene"></canvas>
+          <div id="verdict" class="verdict" aria-live="polite"></div>
+          <div id="boot" class="boot">
+            <span class="boot__spark"></span>
+            <p class="boot__text">Cutting the first 24 chassis out of scrap…</p>
+          </div>
+        </section>
+
+        <aside class="hud" aria-label="Run statistics">
+          <div class="stat">
+            <span class="stat__label">Generation</span>
+            <output id="stat-generation" class="stat__value stat__value--display">0</output>
+          </div>
+          <div class="stat">
+            <span class="stat__label">Best distance</span>
+            <output id="stat-fitness" class="stat__value">0<span class="stat__unit">m</span></output>
+          </div>
+          <div class="stat">
+            <span class="stat__label">Population</span>
+            <output id="stat-population" class="stat__value">24</output>
+          </div>
+          <div class="stat">
+            <span class="stat__label">Finishers</span>
+            <output id="stat-finishers" class="stat__value">0</output>
+          </div>
+          <div class="stat stat--wide">
+            <span class="stat__label">Best ever</span>
+            <output id="stat-best-ever" class="stat__value">—</output>
+          </div>
+          <div class="graph">
+            <span class="stat__label">Fitness curve</span>
+            <canvas id="curve" height="72"></canvas>
+          </div>
+        </aside>
+      </main>
+
+      <section class="console" aria-label="Playback controls">
+        <div class="scrubber">
+          <label class="scrubber__label" for="generation">
+            Generation <output id="generation-value" class="scrubber__value">0</output>
+          </label>
+          <input
+            id="generation"
+            class="slider"
+            type="range"
+            min="0"
+            max="0"
+            value="0"
+            step="1"
+            aria-describedby="progress-note"
+          />
+          <p id="progress-note" class="scrubber__note">Evolving…</p>
+        </div>
+
+        <div class="console__buttons">
+          <button id="play" class="btn btn--primary" type="button">
+            <span id="play-glyph" aria-hidden="true">▶</span>
+            <span id="play-label">Replay</span>
+          </button>
+          <div class="speed" role="group" aria-label="Playback speed">
+            <button class="btn btn--speed" type="button" data-speed="0.5">0.5×</button>
+            <button class="btn btn--speed is-active" type="button" data-speed="1" aria-pressed="true">1×</button>
+            <button class="btn btn--speed" type="button" data-speed="2">2×</button>
+            <button class="btn btn--speed" type="button" data-speed="4">4×</button>
+          </div>
+          <button id="share" class="btn" type="button">
+            <span aria-hidden="true">🔗</span> Share this car
+          </button>
+        </div>
+      </section>
+
+      <section class="floor" aria-label="Population overview">
+        <div class="floor__head">
+          <h2 class="floor__title">The floor</h2>
+          <p class="floor__hint" id="floor-hint">Every car in this generation. Tap one to watch its run.</p>
+        </div>
+        <div id="population" class="floor__grid"></div>
+      </section>
+
+      <footer class="colophon">
+        <p>
+          Real genetic algorithm, real Matter.js physics, no server. Every run is seeded, so a
+          shared link replays the exact same car.
+        </p>
+      </footer>
+    </div>
+
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>
