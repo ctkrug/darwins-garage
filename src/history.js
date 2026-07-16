@@ -1,18 +1,28 @@
 // Drives the evolution loop and keeps every generation, not just the current
 // one — the generation slider replays history, so history is the product here.
 // Evaluating a generation is heavy (24 physics runs), so the async runner
-// yields between generations to keep the main thread responsive.
+// slices the work across physics ticks and yields on a time budget to keep the
+// main thread responsive.
 
 import { createRng } from './rng.js';
 import { createPopulation, evolvePopulation, rankedIndices, EVOLUTION_DEFAULTS } from './evolution.js';
-import { simulateGenome } from './simulate.js';
+import { simulateGenome, createSimulation } from './simulate.js';
 import { isValidTrack, validateTrack } from './track.js';
 import { cloneGenome } from './genome.js';
 
 export const RUN_DEFAULTS = Object.freeze({
+  // Seed 1 is the shipped demo: on the default track its best fitness runs
+  // 625 -> 3755 -> 7212 across 40 generations, so the slider shows a steady
+  // climb rather than a puzzle solved by generation 4.
   seed: 1,
   populationSize: EVOLUTION_DEFAULTS.populationSize,
   generations: 40,
+  // Budget plus worst-case slice overshoot has to stay under the ~50ms the
+  // page can stall without feeling stuck, so the two are tuned together.
+  chunkBudgetMs: 20,
+  // How often the budget can be re-checked. A contact-heavy car peaks near 5ms
+  // per tick, so five ticks caps a slice's overshoot at roughly 25ms.
+  ticksPerSlice: 2,
 });
 
 /**
@@ -41,15 +51,64 @@ export function createRun(track, options = {}) {
   };
 }
 
+/** The population generation `index` will be scored on. */
+function populationFor(run) {
+  return run.history.length === 0
+    ? createPopulation(run.rng, run.config.populationSize)
+    : run.pending;
+}
+
 /**
  * Evaluate the next generation and append it to history.
  * @returns {object} the generation record just computed
  */
 export function runGeneration(run) {
-  const index = run.history.length;
-  const population = index === 0 ? createPopulation(run.rng, run.config.populationSize) : run.pending;
-
+  const population = populationFor(run);
   const results = population.map((genome) => simulateGenome(genome, run.track));
+  return recordGeneration(run, population, results);
+}
+
+/**
+ * Evaluate the next generation in time-boxed slices, handing control back to
+ * the browser whenever the budget is spent. Chunking per individual is not
+ * enough: a single contact-heavy car can cost 250ms on its own, so the slices
+ * cut across the physics ticks themselves.
+ */
+export async function runGenerationAsync(run, options = {}) {
+  const budgetMs = options.budgetMs ?? RUN_DEFAULTS.chunkBudgetMs;
+  const ticksPerSlice = options.ticksPerSlice ?? RUN_DEFAULTS.ticksPerSlice;
+  const yieldControl = options.yieldControl ?? defaultYield;
+  const now = options.now ?? (() => Date.now());
+
+  const population = populationFor(run);
+  const results = [];
+  let sliceStart = now();
+
+  const spendBudget = async () => {
+    if (now() - sliceStart >= budgetMs) {
+      await yieldControl();
+      sliceStart = now();
+    }
+  };
+
+  for (const genome of population) {
+    // Building a car and its terrain is itself ~9ms of work, so the budget is
+    // checked before setup too — otherwise setup and the first ticks stack into
+    // one oversized block.
+    await spendBudget();
+    const sim = createSimulation(genome, run.track);
+    while (!sim.done) {
+      sim.step(ticksPerSlice);
+      await spendBudget();
+    }
+    results.push(sim.result);
+  }
+  return recordGeneration(run, population, results);
+}
+
+/** Score, rank, and store one evaluated generation, then breed the next. */
+function recordGeneration(run, population, results) {
+  const index = run.history.length;
   const fitnesses = results.map((r) => r.fitness);
   const ranked = rankedIndices(fitnesses);
   const best = ranked[0];
@@ -101,7 +160,7 @@ export async function runAllAsync(run, options = {}) {
 
   while (run.history.length < count) {
     if (signal?.aborted) break;
-    const generation = runGeneration(run);
+    const generation = await runGenerationAsync(run, { ...options, yieldControl });
     onGeneration(generation, run);
     await yieldControl();
   }
@@ -139,8 +198,21 @@ export function fitnessCurve(run) {
   }));
 }
 
+// setTimeout(0) is clamped to ~1-4ms per call by browsers, which at hundreds of
+// yields per run would add seconds of pure waiting. A MessageChannel round-trip
+// is a real macrotask — so rendering and input still get in — but unclamped.
 function defaultYield() {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+  if (typeof MessageChannel === 'undefined') {
+    return new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => {
+      channel.port1.close();
+      resolve();
+    };
+    channel.port2.postMessage(null);
+  });
 }
 
 export { isValidTrack };
