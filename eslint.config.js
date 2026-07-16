@@ -23,6 +23,7 @@ export default [
         matchMedia: 'readonly',
         devicePixelRatio: 'readonly',
         ResizeObserver: 'readonly',
+        MessageChannel: 'readonly',
       },
     },
     rules: {
