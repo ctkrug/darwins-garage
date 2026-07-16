@@ -119,6 +119,39 @@ export function normalizeAngle(angle) {
   return wrapped - Math.PI;
 }
 
+/**
+ * The chassis outline in body-local space (relative to its centre of mass) —
+ * what the renderer draws and what the population overview draws silhouettes
+ * from. Matches the hull buildCar gives the physics, so the picture and the
+ * simulation always agree.
+ * @returns {{x: number, y: number}[]}
+ */
+export function chassisOutline(genome) {
+  const safe = normalizeGenome(genome);
+  const hull = Vertices.hull(safe.chassis.map((p) => ({ x: p.x, y: p.y })));
+  const centre = Vertices.centre(hull);
+  return hull.map((p) => ({ x: p.x - centre.x, y: p.y - centre.y }));
+}
+
+/**
+ * Where each wheel sits in body-local space, with its radius. Lets the renderer
+ * draw a car from a genome alone, without building physics bodies for it.
+ */
+export function wheelAnchors(genome) {
+  const safe = normalizeGenome(genome);
+  const hull = Vertices.hull(safe.chassis.map((p) => ({ x: p.x, y: p.y })));
+  const centre = Vertices.centre(hull);
+  return safe.wheels.map((wheel) => {
+    const vertex = safe.chassis[wheel.vertexIndex];
+    return {
+      x: vertex.x - centre.x,
+      y: vertex.y - centre.y,
+      radius: wheel.radius,
+      torque: wheel.torque,
+    };
+  });
+}
+
 /** Rest the car on the ground: the y at which its lowest point touches height. */
 export function lowestOffset(genome) {
   const safe = normalizeGenome(genome);
