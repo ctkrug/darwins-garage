@@ -12,6 +12,10 @@ export const EVOLUTION_DEFAULTS = Object.freeze({
   // which reads as broken to someone scrubbing the generation slider.
   eliteCount: 2,
   mutationRate: 0.18,
+  // Probability a breeding pair is actually spliced rather than the first
+  // parent being cloned. Recombination is a source of novelty in its own right,
+  // separate from mutation, so it gets its own dial.
+  crossoverRate: 0.9,
   vertexJitter: 14,
   radiusJitter: 5,
   torqueJitter: 0.02,
@@ -118,10 +122,20 @@ export function evolvePopulation(population, fitnesses, rng, options = {}) {
     .slice(0, eliteCount)
     .map((i) => cloneGenome(population[i]));
 
+  if (!(config.crossoverRate >= 0 && config.crossoverRate <= 1)) {
+    throw new RangeError(
+      `evolvePopulation: crossoverRate must be within [0, 1], got ${config.crossoverRate}`,
+    );
+  }
+
   while (next.length < population.length) {
     const parentA = selectParent(population, fitnesses, rng, config.tournamentSize);
     const parentB = selectParent(population, fitnesses, rng, config.tournamentSize);
-    next.push(mutate(crossover(parentA, parentB, rng), rng, config));
+    const child =
+      rng() < config.crossoverRate
+        ? crossover(parentA, parentB, rng)
+        : cloneGenome(normalizeGenome(parentA));
+    next.push(mutate(child, rng, config));
   }
   return next;
 }
