@@ -12,7 +12,9 @@ export const GENOME_LIMITS = Object.freeze({
   maxWheels: 4,
   minWheelRadius: 10,
   maxWheelRadius: 35,
-  minTorque: 0.02,
+  // Zero is a real gene, not a floor to clamp away: an undriven wheel that just
+  // rolls is often the better design, and evolution should be free to find that.
+  minTorque: 0,
   maxTorque: 0.12,
   chassisRadius: 60,
   minVertexRadius: 15,
