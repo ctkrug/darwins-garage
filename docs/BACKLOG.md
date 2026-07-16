@@ -6,7 +6,7 @@ is the wow moment and must land before anything else in this backlog.
 
 ## Epic 1 — Evolution engine & core simulation
 
-- [ ] **1.1 [WOW] Generation slider demo end-to-end**
+- [x] **1.1 [WOW] Generation slider demo end-to-end**
   - Loading the app auto-runs and caches generations 0-40 against the default track with no
     user interaction required.
   - Dragging the generation slider to any value between 0 and 40 replays that generation's best
@@ -14,7 +14,7 @@ is the wow moment and must land before anything else in this backlog.
   - The best car's fitness (distance traveled) at generation 40 is at least 5x the best
     fitness at generation 0.
 
-- [ ] **1.2 Physics builder: genome → Matter.js car**
+- [x] **1.2 Physics builder: genome → Matter.js car**
   - `buildCar(genome)` returns a Matter.js `Composite` with one polygon chassis body and one
     body per genome wheel, connected by constraints.
   - The composite can be added to a `World` and stepped for 1000 ticks without throwing or
@@ -22,7 +22,7 @@ is the wow moment and must land before anything else in this backlog.
   - Each wheel has a configurable motor torque that, when applied, drives the chassis forward
     on flat ground.
 
-- [ ] **1.3 Fitness evaluation & simulation runner**
+- [x] **1.3 Fitness evaluation & simulation runner**
   - `simulateGenome(genome, track, seed)` returns a fitness number equal to the maximum
     horizontal distance the chassis reached.
   - Calling `simulateGenome` twice with the same genome, track, and seed returns bit-identical
@@ -30,14 +30,14 @@ is the wow moment and must land before anything else in this backlog.
   - A chassis that tilts past a configurable flip-angle threshold is marked failed and its
     fitness is capped at its distance at the moment of failure.
 
-- [ ] **1.4 Selection, crossover, and mutation**
+- [x] **1.4 Selection, crossover, and mutation**
   - `evolvePopulation(population, fitnesses)` returns a next generation of the same size.
   - Crossover between two parents produces a child whose chassis vertex count equals one of
     the two parents' vertex counts (never an invalid count).
   - At mutation rate 0, `evolvePopulation` reproduces selected parents unchanged (a control
     test proving the mutation operator, not selection, is the source of variation).
 
-- [ ] **1.5 Generation history & default track**
+- [x] **1.5 Generation history & default track**
   - Running N generations stores each generation's full population and fitness array, addressable
     by generation index (`history[i]`).
   - A default hill-climb track (an array of terrain segments) ships and is used whenever no
@@ -45,7 +45,7 @@ is the wow moment and must land before anything else in this backlog.
   - Computing 40 generations of history runs in a chunked/async pass (e.g. `requestIdleCallback`
     or batched `setTimeout`) that never blocks the main thread for more than ~50ms at a stretch.
 
-- [ ] **1.6 Design polish: simulation viewport & HUD**
+- [x] **1.6 Design polish: simulation viewport & HUD**
   - The simulation viewport, generation slider, and HUD readouts use the colors, type, and
     spacing tokens from `docs/DESIGN.md` — no unstyled native slider/button remains.
   - The HUD shows generation number, best fitness, and population size, and updates live as the
@@ -53,14 +53,16 @@ is the wow moment and must land before anything else in this backlog.
 
 ## Epic 2 — Population viz, playback & sharing
 
-- [ ] **2.1 Population overview renderer**
+- [ ] **2.1 Population overview renderer** — *partial: silhouettes and tap-to-select ship; the
+  hall-of-fame strip does not (best-ever is only a HUD readout).*
   - Selecting a generation renders every car in that generation's population as a silhouette on
     the workshop-floor canvas.
   - Tapping/clicking a car selects it and switches the view to single-car replay.
   - A "hall of fame" strip shows the best-ever car across all generations run so far, and
     updates when a new best-ever fitness appears.
 
-- [ ] **2.2 Single-car replay & playback controls**
+- [ ] **2.2 Single-car replay & playback controls** — *partial: play/pause, the 0.5x-4x speed
+  control, and the 120ms camera tween ship; frame-by-frame stepping does not.*
   - Play/pause/step controls scrub a selected car's run frame-by-frame using the deterministic
     simulation from 1.3.
   - A playback-speed control (0.5x/1x/2x/4x) changes replay speed without changing the physics
@@ -68,14 +70,16 @@ is the wow moment and must land before anything else in this backlog.
   - The camera follows the car with the 120ms ease-out tween from `docs/DESIGN.md` — no hard
     camera cuts.
 
-- [ ] **2.3 Shareable replay links**
+- [x] **2.3 Shareable replay links**
   - A "Share" control encodes `{genome, generation, trackId}` into a compact URL parameter.
   - Opening a shared URL in a fresh session reconstructs and replays the exact same run,
     producing the same fitness result as the original.
   - An invalid or corrupted share parameter renders an inline error state instead of crashing
     the app.
 
-- [ ] **2.4 Juice pass: sound & win celebration**
+- [ ] **2.4 Juice pass: sound & win celebration** — *partial: all five synth SFX and the
+  persisted mute ship; a new best-ever pops the stat and plays the fanfare, but the confetti
+  celebration does not exist yet.*
   - All five synth SFX from `docs/DESIGN.md` (tick, clatter, thud, chime, fanfare) fire on their
     respective triggers using WebAudio oscillators/noise — zero audio files.
   - The mute toggle persists across reloads via `localStorage` and silences all SFX immediately
@@ -83,7 +87,7 @@ is the wow moment and must land before anything else in this backlog.
   - A new best-ever fitness triggers the confetti-and-stats-flash celebration described in
     `docs/DESIGN.md`.
 
-- [ ] **2.5 Design polish: mobile touch & responsive layout**
+- [x] **2.5 Design polish: mobile touch & responsive layout**
   - At 390px width, the viewport, slider, and HUD compose per `docs/DESIGN.md`'s layout intent
     with no horizontal scroll or element overlap.
   - The generation slider, playback buttons, and mute toggle all have ≥44px touch targets and
@@ -116,4 +120,9 @@ is the wow moment and must land before anything else in this backlog.
 
 ---
 
-**Total: 14 stories across 3 epics.**
+**Total: 14 stories across 3 epics.** 8 done — all of epic 1 (the engine and the wow moment),
+plus share links and the responsive/mobile pass. 3 partially done (2.1, 2.2, 2.4 — see notes).
+Epic 3 (the track editor) is untouched.
+
+A story is only checked off when every one of its acceptance criteria verifiably holds; the
+partials above are deliberately left unchecked rather than rounded up.
