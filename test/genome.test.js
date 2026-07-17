@@ -135,6 +135,38 @@ test('normalizeGenome defaults a missing torque instead of emitting NaN', () => 
   }
 });
 
+test('normalizeGenome rejects a chassis whose vertices are all collinear', () => {
+  // A hull of collinear points has zero area: Matter's Vertices.centre divides
+  // by that area, so a genome like this would build a car whose outline and
+  // wheel anchors are all NaN — invisible everywhere it's drawn, even though
+  // the physics sim happens to survive it via the exploded-car NaN guard.
+  assert.throws(
+    () =>
+      normalizeGenome({
+        chassis: [
+          { x: 20, y: 0 },
+          { x: 30, y: 0 },
+          { x: 40, y: 0 },
+          { x: 50, y: 0 },
+          { x: 60, y: 0 },
+        ],
+        wheels: twoWheels(),
+      }),
+    RangeError,
+  );
+});
+
+test('normalizeGenome rejects a chassis whose vertices all coincide', () => {
+  assert.throws(
+    () =>
+      normalizeGenome({
+        chassis: Array.from({ length: 5 }, () => ({ x: 20, y: 0 })),
+        wheels: twoWheels(),
+      }),
+    RangeError,
+  );
+});
+
 test('normalizeGenome rejects genomes below the structural minimums', () => {
   assert.throws(() => normalizeGenome({ chassis: ring(3), wheels: twoWheels() }), RangeError);
   assert.throws(
