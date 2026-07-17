@@ -35,14 +35,18 @@ Working today:
 - **Generation scrubber** — the page evolves all 40 generations on load, opening the slider up as
   each lands. Scrub to any generation to replay its best car; tap any car on the floor to watch
   that one instead.
+- **Hall of fame** — the best car run so far is pinned to the HUD with its own share button, and
+  updates live whenever a new best-ever fitness appears.
 - **Shareable replay links** — any car exports to a URL carrying its full genome. No server, no
   database row. A corrupted link shows an inline error rather than a blank page.
 - **Live HUD** — generation, best distance, finishers, best-ever, and a fitness curve that
   updates as the run evolves.
-- **Playback controls** — play/pause, 0.5×–4× speed. Speed changes only how fast a decided run is
-  shown, never the physics.
-- **Synthesized sound** — every effect is built from oscillators at runtime (zero audio files),
-  with a mute toggle that persists.
+- **Playback controls** — play/pause, 0.5×–4× speed, and step-back/step-forward buttons that
+  scrub a car's run one physics tick at a time. Speed and stepping only change how a decided run
+  is shown, never the physics.
+- **Synthesized sound & win celebration** — every effect is built from oscillators at runtime
+  (zero audio files), with a mute toggle that persists; a new best-ever fitness flashes the HUD
+  gold and fires a confetti burst.
 
 Still to come:
 
@@ -60,8 +64,8 @@ Still to come:
 
 ## Status
 
-The core loop works end to end: evolution, physics, the generation slider, replay, and sharing.
-The track editor (epic 3) is not built yet.
+Epics 1 and 2 are done: evolution, physics, the generation slider, replay/stepping, sharing, the
+hall of fame, and the juice pass. The track editor (epic 3) is not built yet.
 
 See [`docs/VISION.md`](docs/VISION.md) for the design, [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 for a map of the code, and [`docs/BACKLOG.md`](docs/BACKLOG.md) for what is left.
