@@ -881,10 +881,25 @@ body {
   color: var(--text-muted);
   font-size: 0.82rem;
   max-width: 70ch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  justify-content: space-between;
 }
 
 .colophon p {
   margin: 0;
+}
+
+.colophon__more a {
+  color: var(--accent);
+  text-decoration-color: rgba(213, 84, 26, 0.4);
+  text-underline-offset: 3px;
+  transition: color var(--t-ui) var(--ease);
+}
+
+.colophon__more a:hover {
+  color: var(--surface-2);
 }
 
 /* ---------- responsive ---------- */
