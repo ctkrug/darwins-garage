@@ -26,6 +26,12 @@ const dom = {
   playGlyph: el('play-glyph'),
   playLabel: el('play-label'),
   share: el('share'),
+  hofCard: el('hof-card'),
+  hofCanvas: el('hof-canvas'),
+  hofFitness: el('hof-fitness'),
+  hofGen: el('hof-gen'),
+  hofShare: el('hof-share'),
+  hofEmpty: el('hof-empty'),
   mute: el('mute'),
   muteGlyph: el('mute-glyph'),
   population: el('population'),
@@ -146,6 +152,23 @@ function renderHud() {
     dom.statBestEver.textContent = `${metres(best.fitness)}m · gen ${best.generation}`;
   }
   drawCurve();
+}
+
+/** Pin the best-ever car to the hall-of-fame card, or show the empty state. */
+function renderHallOfFame(best) {
+  if (!best) {
+    dom.hofEmpty.hidden = false;
+    dom.hofCard.hidden = true;
+    dom.hofShare.hidden = true;
+    return;
+  }
+  dom.hofEmpty.hidden = true;
+  dom.hofCard.hidden = false;
+  dom.hofShare.hidden = false;
+  dom.hofFitness.textContent = `${metres(best.fitness)}m`;
+  dom.hofGen.textContent = `gen ${best.generation}`;
+  // Deferred a frame so the canvas has been unhidden and laid out.
+  requestAnimationFrame(() => drawSilhouette(dom.hofCanvas, best.genome, true));
 }
 
 function popStat(node) {
@@ -395,6 +418,26 @@ function syncPlayButton() {
   dom.playLabel.textContent = state.playing ? 'Pause' : atEnd ? 'Replay' : 'Play';
 }
 
+function buildShareUrl(genome, generation) {
+  return shareUrl(
+    { genome, generation, trackId: DEFAULT_TRACK_ID },
+    window.location.href.split('?')[0],
+  );
+}
+
+/** Copy a share URL to the clipboard, falling back to a prompt; reports success. */
+async function writeShareLink(url) {
+  try {
+    await navigator.clipboard.writeText(url);
+    return true;
+  } catch {
+    // Clipboard access is denied in plenty of ordinary contexts (insecure
+    // origin, permission prompt dismissed); fall back to showing the link.
+    window.prompt('Copy this link to share the car:', url);
+    return false;
+  }
+}
+
 function wireControls() {
   dom.slider.addEventListener('input', () => {
     audio.unlock();
@@ -441,25 +484,33 @@ function wireControls() {
     audio.unlock();
     const genome = currentGenome();
     if (!genome) return;
-    const url = shareUrl(
-      { genome, generation: state.generation, trackId: DEFAULT_TRACK_ID },
-      window.location.href.split('?')[0],
-    );
-    const done = (label) => {
-      dom.share.innerHTML = `<span aria-hidden="true">✓</span> ${label}`;
-      setTimeout(() => {
-        dom.share.innerHTML = '<span aria-hidden="true">🔗</span> Share this car';
-      }, 2000);
-    };
-    try {
-      await navigator.clipboard.writeText(url);
-      done('Link copied');
-    } catch {
-      // Clipboard access is denied in plenty of ordinary contexts (insecure
-      // origin, permission prompt dismissed); fall back to showing the link.
-      window.prompt('Copy this link to share the car:', url);
-      done('Link ready');
-    }
+    const copied = await writeShareLink(buildShareUrl(genome, state.generation));
+    dom.share.innerHTML = `<span aria-hidden="true">✓</span> ${copied ? 'Link copied' : 'Link ready'}`;
+    setTimeout(() => {
+      dom.share.innerHTML = '<span aria-hidden="true">🔗</span> Share this car';
+    }, 2000);
+  });
+
+  dom.hofCard.addEventListener('click', () => {
+    audio.unlock();
+    audio.tick();
+    const best = bestEver(state.run);
+    if (!best) return;
+    selectGeneration(best.generation);
+    selectIndividual(best.individual);
+  });
+
+  dom.hofShare.addEventListener('click', async () => {
+    audio.unlock();
+    const best = bestEver(state.run);
+    if (!best) return;
+    const copied = await writeShareLink(buildShareUrl(best.genome, best.generation));
+    dom.hofShare.innerHTML = '<span aria-hidden="true">✓</span>';
+    dom.hofShare.setAttribute('aria-label', copied ? 'Link copied' : 'Link ready');
+    setTimeout(() => {
+      dom.hofShare.innerHTML = '<span aria-hidden="true">🔗</span>';
+      dom.hofShare.setAttribute('aria-label', 'Share the hall-of-fame car');
+    }, 2000);
   });
 
   // Keyboard: the slider handles arrows natively; space toggles playback.
@@ -532,6 +583,7 @@ async function boot() {
           audio.fanfare();
         }
       }
+      renderHallOfFame(best);
       dom.progressNote.textContent = `Evolved ${state.run.history.length} of ${state.run.config.generations} generations…`;
     },
   });
