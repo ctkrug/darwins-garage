@@ -66,7 +66,14 @@
         </p>
         <div class="masthead__tools">
           <button id="mute" class="btn btn--icon" type="button" aria-pressed="false">
-            <span id="mute-glyph" aria-hidden="true">🔊</span>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path class="icon__speaker" d="M4 9.5h3.2L11.5 6v12L7.2 14.5H4z" />
+              <g class="icon__waves">
+                <path d="M14.6 8.9a4.3 4.3 0 0 1 0 6.2" />
+                <path d="M17.1 6.4a7.8 7.8 0 0 1 0 11.2" />
+              </g>
+              <path class="icon__cross" d="M15.2 9.6l5.2 4.8M20.4 9.6l-5.2 4.8" />
+            </svg>
             <span class="sr-only">Mute sound effects</span>
           </button>
         </div>
@@ -124,7 +131,11 @@
                 hidden
                 aria-label="Share the hall-of-fame car"
               >
-                <span aria-hidden="true">🔗</span>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path class="icon__link" d="M10 14a4 4 0 0 0 5.7 0l3-3A4 4 0 0 0 13 5.4l-1.7 1.7" />
+                  <path class="icon__link" d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.6l1.7-1.7" />
+                  <path class="icon__check" d="M5 12.5l4.5 4.5L19 7.5" />
+                </svg>
               </button>
             </div>
             <p id="hof-empty" class="hof__empty">No best-ever car yet. Keep evolving.</p>
@@ -175,7 +186,12 @@
             <button class="btn btn--speed" type="button" data-speed="4">4×</button>
           </div>
           <button id="share" class="btn" type="button">
-            <span aria-hidden="true">🔗</span> Share this car
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path class="icon__link" d="M10 14a4 4 0 0 0 5.7 0l3-3A4 4 0 0 0 13 5.4l-1.7 1.7" />
+              <path class="icon__link" d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.6l1.7-1.7" />
+              <path class="icon__check" d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+            <span id="share-label">Share this car</span>
           </button>
         </div>
       </section>

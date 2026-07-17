@@ -36,7 +36,7 @@ const dom = {
   hofShare: el('hof-share'),
   hofEmpty: el('hof-empty'),
   mute: el('mute'),
-  muteGlyph: el('mute-glyph'),
+  shareLabel: el('share-label'),
   population: el('population'),
   floorHint: el('floor-hint'),
   shareError: el('share-error'),
@@ -439,6 +439,15 @@ function syncPlayButton() {
   dom.playLabel.textContent = state.playing ? 'Pause' : atEnd ? 'Replay' : 'Play';
 }
 
+/** Point the mute button's icon, pressed state, and label at one muted flag. */
+function syncMuteButton(muted) {
+  dom.mute.classList.toggle('is-muted', muted);
+  dom.mute.setAttribute('aria-pressed', String(muted));
+  dom.mute.querySelector('.sr-only').textContent = muted
+    ? 'Unmute sound effects'
+    : 'Mute sound effects';
+}
+
 /** Pause playback and move exactly one recorded frame, clamped to the run. */
 function stepFrame(delta) {
   if (!state.playback || state.playback.frames.length === 0) return;
@@ -502,12 +511,7 @@ function wireControls() {
 
   dom.mute.addEventListener('click', () => {
     audio.unlock();
-    const muted = audio.toggleMute();
-    dom.muteGlyph.textContent = muted ? '🔇' : '🔊';
-    dom.mute.setAttribute('aria-pressed', String(muted));
-    dom.mute.querySelector('.sr-only').textContent = muted
-      ? 'Unmute sound effects'
-      : 'Mute sound effects';
+    syncMuteButton(audio.toggleMute());
   });
 
   dom.share.addEventListener('click', async () => {
@@ -515,9 +519,11 @@ function wireControls() {
     const genome = currentGenome();
     if (!genome) return;
     const copied = await writeShareLink(buildShareUrl(genome, state.generation));
-    dom.share.innerHTML = `<span aria-hidden="true">✓</span> ${copied ? 'Link copied' : 'Link ready'}`;
+    dom.share.classList.add('is-copied');
+    dom.shareLabel.textContent = copied ? 'Link copied' : 'Link ready';
     setTimeout(() => {
-      dom.share.innerHTML = '<span aria-hidden="true">🔗</span> Share this car';
+      dom.share.classList.remove('is-copied');
+      dom.shareLabel.textContent = 'Share this car';
     }, 2000);
   });
 
@@ -545,10 +551,10 @@ function wireControls() {
     const best = bestEver(state.run);
     if (!best) return;
     const copied = await writeShareLink(buildShareUrl(best.genome, best.generation));
-    dom.hofShare.innerHTML = '<span aria-hidden="true">✓</span>';
+    dom.hofShare.classList.add('is-copied');
     dom.hofShare.setAttribute('aria-label', copied ? 'Link copied' : 'Link ready');
     setTimeout(() => {
-      dom.hofShare.innerHTML = '<span aria-hidden="true">🔗</span>';
+      dom.hofShare.classList.remove('is-copied');
       dom.hofShare.setAttribute('aria-label', 'Share the hall-of-fame car');
     }, 2000);
   });
@@ -593,8 +599,9 @@ function loadSharedCar() {
 
 async function boot() {
   wireControls();
-  dom.mute.setAttribute('aria-pressed', String(audio.muted));
-  dom.muteGlyph.textContent = audio.muted ? '🔇' : '🔊';
+  // The mute preference is restored from localStorage, so the button has to
+  // start from whatever audio.js loaded rather than from the markup's default.
+  syncMuteButton(audio.muted);
   document.body.classList.add('is-booting');
   requestAnimationFrame(frame);
 

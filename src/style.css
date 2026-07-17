@@ -159,6 +159,53 @@ body {
   font-size: 0.95rem;
 }
 
+/* ---------- icons ---------- */
+
+/* Drawn in currentColor so every icon takes the shop palette. Emoji glyphs came
+   out of the font in their own blue, the one colour on the page that belonged to
+   nobody's brand. */
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon__speaker {
+  fill: currentColor;
+  stroke-linejoin: round;
+}
+
+/* The mute button holds both states and shows one: no glyph swapping in JS. */
+.icon__cross {
+  display: none;
+}
+
+.is-muted .icon__waves {
+  display: none;
+}
+
+.is-muted .icon__cross {
+  display: inline;
+}
+
+/* Same trick for "copied": the check is already in the button. */
+.icon__check {
+  display: none;
+}
+
+.is-copied .icon__link {
+  display: none;
+}
+
+.is-copied .icon__check {
+  display: inline;
+}
+
 /* ---------- buttons ---------- */
 
 .btn {
