@@ -12,8 +12,9 @@ import { cloneGenome } from './genome.js';
 
 export const RUN_DEFAULTS = Object.freeze({
   // Seed 1 is the shipped demo: on the default track its best fitness runs
-  // 674 -> 4992 -> 7216 across generations 0, 10 and 20, and five cars finish
-  // by generation 40 — a steady climb rather than a puzzle solved instantly.
+  // 579 -> 7213 -> 7214 across generations 0, 10 and 20 — the course is
+  // essentially solved by generation 10, after which the best car barely
+  // moves while more of the population catches up to finishing behind it.
   seed: 1,
   populationSize: EVOLUTION_DEFAULTS.populationSize,
   generations: 40,
