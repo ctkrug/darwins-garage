@@ -21,13 +21,26 @@ with a stenciled/spray-paint personality rather than a technical-drawing one.
 | `--bg` | `#e8e0d0` | page background — bleached concrete |
 | `--surface-1` | `#d9cdb4` | panel background — worn floor/cardstock |
 | `--surface-2` | `#2b2620` | dark steel panel (HUD readouts, header bar) |
+| `--surface-2-lift` | `#3a332b` | a raised step on `--surface-2` (stat rows, chips) |
 | `--text` | `#241f19` | primary text on light surfaces |
 | `--text-on-dark` | `#f2ead8` | primary text on `--surface-2` |
-| `--text-muted` | `#6b6152` | secondary/caption text |
-| `--accent` | `#d5541a` | rust-orange — primary actions, active states |
+| `--text-muted` | `#544c40` | secondary/caption text |
+| `--accent` | `#d5541a` | rust-orange — primary actions, active states, fills |
+| `--accent-ink` | `#93380e` | the same rust for accent-coloured **text** (see below) |
+| `--accent-bright` | `#e2673a` | the lit top edge of an `--accent` plate gradient |
 | `--accent-support` | `#e8b400` | safety-yellow — highlights, best-of-generation marker |
 | `--success` | `#4f7942` | goal reached / car finishes track |
 | `--danger` | `#b3261e` | car flips / chassis breaks |
+
+Two of these carry a contrast rule worth stating, because both were broken once:
+
+- `--text-muted` started at `#6b6152`, which read 4.63:1 on `--bg` but only
+  3.86:1 on `--surface-1`. Muted text lands on panels too, so it was darkened
+  until it clears 4.5:1 on both.
+- **`--accent` is a paint, not an ink.** At 2.61:1 on `--surface-1` and 3.13:1 on
+  `--bg` it can fill a shape, draw a border, or set the wordmark (large display
+  text needs only 3:1), but it fails AA at any word size. Anything text-sized and
+  rust uses `--accent-ink`, which is the same hue at 70%: 4.74:1 and 5.69:1.
 
 **Type**
 - Display: **"Bungee"** (Google Fonts) — stenciled, industrial-poster weight, for the wordmark,
