@@ -12,6 +12,10 @@ import { DEFAULT_TRACK_ID } from './track.js';
 export const SHARE_PARAM = 'car';
 const FORMAT_VERSION = 1;
 
+// Every way a link can arrive damaged looks identical to the person holding it,
+// so they all get the one message that names the likely cause.
+const UNREADABLE = "This share link isn't readable. It may have been cut short when copied.";
+
 /**
  * Encode a run into a compact URL-safe string.
  * @param {{genome: object, generation?: number, trackId?: string}} run
@@ -48,19 +52,19 @@ export function decodeShare(encoded) {
   try {
     payload = fromBase64Url(encoded);
   } catch {
-    return fail("This share link isn't readable — it may have been cut short when copied.");
+    return fail(UNREADABLE);
   }
 
   const parts = payload.split('|');
   if (parts.length !== 6) {
-    return fail("This share link isn't readable — it may have been cut short when copied.");
+    return fail(UNREADABLE);
   }
   // Verify the tail before trusting any field. Dropping characters off the end
   // of a link usually still parses: a four-wheel car quietly arrives as a
   // three-wheel one, which is worse than refusing it.
   const body = parts.slice(0, 5).join('|');
   if (parts[5] !== checksum(body)) {
-    return fail("This share link isn't readable — it may have been cut short when copied.");
+    return fail(UNREADABLE);
   }
   const [rawVersion, rawGeneration, trackId, rawChassis, rawWheels] = parts;
 
