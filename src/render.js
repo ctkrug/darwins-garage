@@ -279,6 +279,26 @@ export function createRenderer(canvas) {
     ctx.restore();
   }
 
+  /**
+   * The best-ever celebration burst. Particles carry their own screen-space
+   * position (from confetti.js), so this paints them directly with no camera
+   * transform — they are a UI overlay, not part of the world.
+   * @param {object[]} particles
+   */
+  function drawConfetti(particles) {
+    ctx.save();
+    for (const p of particles) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life / p.maxLife));
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
   return {
     resize,
     clear,
@@ -286,6 +306,7 @@ export function createRenderer(canvas) {
     drawTrack,
     drawCar,
     drawEmptyState,
+    drawConfetti,
     moveCamera,
     snapCamera,
     toScreen,
