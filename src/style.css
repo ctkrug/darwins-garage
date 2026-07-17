@@ -364,6 +364,21 @@ body {
   animation: shake var(--t-game) var(--ease) 2;
 }
 
+/* The win celebration: the stats rail flashes gold behind the confetti burst. */
+.hud.is-celebrating {
+  animation: celebrate 500ms var(--ease);
+}
+
+@keyframes celebrate {
+  0%,
+  100% {
+    box-shadow: var(--shadow-stamp);
+  }
+  40% {
+    box-shadow: 0 0 0 4px rgba(232, 180, 0, 0.55), var(--shadow-stamp);
+  }
+}
+
 @keyframes shake {
   0%,
   100% {
