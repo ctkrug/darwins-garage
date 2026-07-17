@@ -23,10 +23,32 @@ export const CAMERA_DEFAULTS = Object.freeze({
   // at 60fps: 1 - exp(-dt/tau) with tau chosen so the camera closes ~63% of the
   // gap in 120ms. Recomputed per frame so it stays correct at any frame rate.
   tauMs: 120,
-  worldWidth: 1500,
-  minWorldWidth: 900,
-  groundPadding: 220,
+  // Ceilings on what the viewport may show, in world units. Scale takes the
+  // binding one, so neither axis can ever open up further than this.
+  maxWorldWidth: 1500,
+  maxWorldHeight: 560,
 });
+
+/** Where the camera's focus point lands vertically, as a fraction of the canvas. */
+export const HORIZON_ANCHOR = 0.58;
+
+/**
+ * World-units-to-pixels for a viewport, framed on whichever axis is tighter.
+ *
+ * Scaling on width alone lets a tall canvas show an unbounded slice of world
+ * height, which on a phone left the car adrift in a screen of empty sky. Taking
+ * the larger of the two ratios caps both axes, so a ~100-unit car reads at the
+ * same fraction of the frame whatever the aspect ratio.
+ *
+ * @param {number} width canvas CSS width
+ * @param {number} height canvas CSS height
+ * @returns {number} pixels per world unit
+ */
+export function viewScale(width, height) {
+  const byWidth = Math.max(1, width) / CAMERA_DEFAULTS.maxWorldWidth;
+  const byHeight = Math.max(1, height) / CAMERA_DEFAULTS.maxWorldHeight;
+  return Math.max(byWidth, byHeight);
+}
 
 /**
  * Create a renderer bound to a canvas.
@@ -51,13 +73,13 @@ export function createRenderer(canvas) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  /** World units visible across the canvas — narrower on a phone. */
-  function worldWidth() {
-    return width < 700 ? CAMERA_DEFAULTS.minWorldWidth : CAMERA_DEFAULTS.worldWidth;
+  function scale() {
+    return viewScale(width, height);
   }
 
-  function scale() {
-    return width / worldWidth();
+  /** World units visible across the canvas at the current scale. */
+  function worldWidth() {
+    return width / scale();
   }
 
   /** Snap the camera straight to a target, with no tween (used on scrub). */
@@ -85,9 +107,10 @@ export function createRenderer(canvas) {
     const s = scale();
     return {
       x: (x - camera.x) * s + width / 2,
-      // The car rides low in the frame: it leaves room to see the climb ahead
-      // without leaving a dead sea of empty sky above it.
-      y: (y - camera.y) * s + height * 0.74,
+      // Sit the car a little below centre: enough headroom to watch it launch
+      // off a crest, but weighted so the frame fills with terrain rather than
+      // with empty sky.
+      y: (y - camera.y) * s + height * HORIZON_ANCHOR,
     };
   }
 
