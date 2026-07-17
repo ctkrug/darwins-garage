@@ -13,6 +13,10 @@
      (failing WCAG AA) — this darker value clears 4.5:1 on both. */
   --text-muted: #544c40;
   --accent: #d5541a;
+  /* The rust reads 2.61:1 on --surface-1 and 3.13:1 on --bg, so it can fill a
+     shape or set a headline in Bungee, but it cannot be small text. This is the
+     same hue taken to 70% for anything word-sized: 4.74:1 and 5.69:1. */
+  --accent-ink: #93380e;
   --accent-bright: #e2673a;
   --accent-support: #e8b400;
   --success: #4f7942;
@@ -619,7 +623,7 @@ body {
 .scrubber__value {
   font-family: var(--font-mono);
   font-size: 0.95rem;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .scrubber__note {
@@ -857,7 +861,7 @@ body {
   margin: var(--space-4) 0 var(--space-1);
   font-family: var(--font-display);
   font-size: 1rem;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .prose h4 {
@@ -939,8 +943,8 @@ body {
 }
 
 .colophon__more a {
-  color: var(--accent);
-  text-decoration-color: rgba(213, 84, 26, 0.4);
+  color: var(--accent-ink);
+  text-decoration-color: rgba(147, 56, 14, 0.45);
   text-underline-offset: 3px;
   transition: color var(--t-ui) var(--ease);
 }
