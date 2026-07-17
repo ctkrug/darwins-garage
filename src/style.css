@@ -123,13 +123,15 @@ body {
   color: var(--accent);
 }
 
-/* The signature detail: the G of "Garage" is a gear that turns. */
+/* The signature detail: the G of "Garage" is a gear that turns. It carries the
+   word's own colour and sits at cap height, or it reads as a stray asterisk
+   dropped into the middle of "GARAGE" rather than as a letter. */
 .wordmark__gear {
   display: inline-block;
-  width: 0.92em;
-  height: 0.92em;
-  vertical-align: -0.12em;
-  color: var(--accent-support);
+  width: 1em;
+  height: 1em;
+  margin: 0 -0.09em;
+  vertical-align: -0.17em;
   animation: spin 9s linear infinite;
 }
 
