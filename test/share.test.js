@@ -114,6 +114,22 @@ test('decodeShare rejects a payload describing a degenerate, zero-area chassis',
   assert.match(result.error, /couldn't be built/);
 });
 
+test('decodeShare rejects a payload with a negative or non-integer generation', () => {
+  // encodeShare guards this on the way out, but a hand-edited link skips the
+  // encoder entirely, so decodeShare needs its own floor on the raw field.
+  const encode = (generation) =>
+    Buffer.from(`1|${generation}|default-hill|0,0;10,0;20,0;30,0;40,0|0,20,0.05;1,20,0.05`, 'utf8')
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  for (const bad of ['-1', '1.5', 'NaN', 'x']) {
+    const result = decodeShare(encode(bad));
+    assert.equal(result.ok, false, `expected generation ${bad} to be rejected`);
+    assert.match(result.error, /impossible generation/);
+  }
+});
+
 test('decodeShare refuses a future format version', () => {
   const payload = Buffer.from('99|0|default-hill|0,0|0,0', 'utf8')
     .toString('base64')
