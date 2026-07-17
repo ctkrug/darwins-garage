@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Watch a population of randomly-shaped vehicles evolve into fast, working cars via a real genetic algorithm and live 2D physics.",
+  "description": "Evolve a car out of scrap, in your browser: a genetic algorithm car evolution simulator running on Matter.js physics.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
