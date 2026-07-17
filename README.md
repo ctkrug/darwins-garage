@@ -1,90 +1,117 @@
 # Darwin's Garage
 
-Watch a population of randomly-shaped vehicles evolve — real genetic algorithm, real 2D
-physics — into fast, weird, working cars over generations. Then grab your favorite mutant's
-replay and send it to a friend.
+**▶ Live demo — [apps.charliekrug.com/darwins-garage](https://apps.charliekrug.com/darwins-garage/)**
 
-## What it is
+[![CI](https://github.com/ctkrug/darwins-garage/actions/workflows/ci.yml/badge.svg)](https://github.com/ctkrug/darwins-garage/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-d5541a.svg)](LICENSE)
 
-Every car starts life as a random skeleton: a polygon chassis with wheels bolted on at random
-points, random sizes, random torque. Generation 0 is a pile of junk — vehicles that flop, flip,
-and go nowhere on a bumpy test track. Darwin's Garage runs a real genetic algorithm (tournament
-selection, crossover between two parent chassis, mutation of wheel position/size/torque and
-chassis geometry) on that population, generation after generation, inside a live Matter.js
-physics simulation. Scrub the generation slider forward and you watch evolution actually work:
-on the shipped course, the best car covers 58m in generation 0 and the full 720m by generation
-20 — a shape nobody designed, climbing a hill it has never seen, then nosing over at the one
-terrain feature it never evolved to handle.
+Evolve a car out of scrap, in your browser. Twenty-four vehicles built from random numbers drive
+a hill course under real 2D physics, the ones that get furthest breed, and forty generations later
+something that nobody designed is climbing the whole thing.
 
-## Why it's interesting
+![Darwin's Garage: an evolved car airborne over the rubble field, with the fitness curve climbing in the HUD](docs/screenshot.png)
 
-Physics-based car evolution has been built before. What's hard — and what this project is
-actually about — is the *tuning*: a fitness function, mutation rate, and selection pressure that
-make evolution visibly converge instead of stalling on generation 3 or exploding into physics
-garbage by generation 10. The genetic algorithm and the physics engine are both well-understood
-building blocks; making them cooperate so progress is legible on a slider is the real skill on
-display.
+## Who it is for
+
+People who lost an afternoon to BoxCar2D and want that back without Flash, and anyone who wants to
+watch a genetic algorithm actually converge instead of reading about one. If you have ever wanted
+to see selection pressure do something visible, this is 40 generations of it on a slider.
+
+## What it does
+
+Every car starts as a random skeleton: a polygon chassis of five to eight vertices, wheels bolted
+to random corners at random radii, each with its own torque. Generation 0 is a pile of junk that
+flops, flips, and goes nowhere on the rubble field.
+
+From there a real genetic algorithm takes over. Tournament selection picks parents, crossover
+splices two parent chassis into a child, and mutation nudges wheel position, radius, torque, and
+chassis geometry. Each candidate runs the same course inside a Matter.js simulation, and the
+distance it covers before it flips, stalls, or runs out of time is its fitness. On the shipped
+course the best car covers 58m in generation 0 and the full 720m by generation 20.
+
+## Why it was worth building
+
+Physics-based car evolution is not a new idea. The hard part is the tuning: a fitness function,
+mutation rate, and selection pressure that make evolution visibly converge rather than stalling on
+generation 3 or exploding into physics garbage by generation 10. The genetic algorithm and the
+physics engine are both well-understood parts. Making them cooperate so that progress is legible
+on a slider is the actual work, and it is why the track is shaped the way it is: a flat run-up, a
+rubble field that filters out the shapes that only topple forward, then a climb.
 
 ## Features
 
-Working today:
-
-- **Evolution engine** — tournament selection, crossover, and mutation over a chassis+wheel
-  genome, run against Matter.js physics with a fitness function tuned so progress is visible and
-  steady rather than solved by generation 4.
-- **Generation scrubber** — the page evolves all 40 generations on load, opening the slider up as
-  each lands. Scrub to any generation to replay its best car; tap any car on the floor to watch
+- **Evolution engine** with tournament selection, crossover, and mutation over a chassis and wheel
+  genome, tuned so the fitness curve climbs steadily instead of solving the course by generation 4.
+- **Generation scrubber.** The page evolves all 40 generations on load and opens the slider as each
+  one lands. Scrub to any generation to replay its best car, or tap any car on the floor to watch
   that one instead.
-- **Hall of fame** — the best car run so far is pinned to the HUD with its own share button, and
-  updates live whenever a new best-ever fitness appears.
-- **Shareable replay links** — any car exports to a URL carrying its full genome. No server, no
-  database row. A corrupted link shows an inline error rather than a blank page.
-- **Live HUD** — generation, best distance, finishers, best-ever, and a fitness curve that
-  updates as the run evolves.
-- **Playback controls** — play/pause, 0.5×–4× speed, and step-back/step-forward buttons that
-  scrub a car's run one physics tick at a time. Speed and stepping only change how a decided run
-  is shown, never the physics.
-- **Synthesized sound & win celebration** — every effect is built from oscillators at runtime
-  (zero audio files), with a mute toggle that persists; a new best-ever fitness flashes the HUD
-  gold and fires a confetti burst.
+- **Hall of fame.** The best run so far is pinned to the HUD with its own share button and updates
+  the moment a new best-ever fitness appears.
+- **Shareable replay links.** Any car packs into a URL carrying its full genome, checksummed so a
+  link that got cut short in a chat window is refused rather than quietly replaying a different
+  car. No server, no database row.
+- **Live HUD** showing generation, best distance, finishers, best-ever, and a fitness curve that
+  plots the best and average of every generation as the run evolves.
+- **Playback controls.** Play/pause, 0.5x to 4x speed, and step buttons that scrub one physics tick
+  at a time. Speed and stepping only change how a decided run is shown, never the physics.
+- **Synthesized sound and a win celebration.** Every effect is built from oscillators at runtime
+  with no audio files, the mute toggle persists, and a new best-ever flashes the HUD gold and fires
+  confetti.
 
-Still to come:
+Not built yet: a track editor for drawing custom terrain, and saving custom courses.
 
-- **Track editor** — draw custom terrain and point evolution at hills and gaps you choose.
-- **Track persistence** — save and switch between custom courses.
+## Run it locally
 
-## Stack
+```bash
+git clone https://github.com/ctkrug/darwins-garage.git
+cd darwins-garage
+npm install
+npm run dev
+```
 
-- **JavaScript** (vanilla, ES modules) — no framework; this is a simulation + canvas app, not a
-  component-heavy UI.
-- **[Matter.js](https://brm.io/matter-js/)** for 2D rigid-body physics (chassis, wheels,
-  constraints, terrain collision).
-- **Canvas 2D** for rendering (population overview, single-car replay, track editor).
-- Static site, zero backend — builds to a single directory, deployable to any static host.
-
-## Status
-
-Epics 1 and 2 are done: evolution, physics, the generation slider, replay/stepping, sharing, the
-hall of fame, and the juice pass. The track editor (epic 3) is not built yet.
-
-See [`docs/VISION.md`](docs/VISION.md) for the design, [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-for a map of the code, and [`docs/BACKLOG.md`](docs/BACKLOG.md) for what is left.
+Then open the URL it prints. Node 20 or newer.
 
 ## Development
 
 ```bash
-npm install
 npm run dev      # local dev server
-npm test         # node --test — pure logic + physics, no browser needed
+npm test         # node --test: pure logic plus physics, no browser needed
 npm run lint
-npm run build    # -> dist/, static and relative-pathed for subpath hosting
-npm run preview  # serve the built dist/
+npm run build    # -> site/, static and relative-pathed for subpath hosting
+npm run preview  # serve the built site/
 ```
 
 Runs are seeded, so the demo is reproducible: the same seed always produces the same 40
-generations. `test/acceptance.test.js` runs the real demo and guards that promise, so it is
-slow by design.
+generations. `test/acceptance.test.js` runs the real demo and guards that promise, which is why it
+is slow on purpose.
+
+## How the code is laid out
+
+| Module | Job |
+|---|---|
+| `src/genome.js` | The car genome: chassis vertices, wheels, and validation. |
+| `src/evolution.js` | Selection, crossover, and mutation. |
+| `src/simulate.js` | Runs one genome through Matter.js and scores it. |
+| `src/history.js` | Runs a whole population across generations. |
+| `src/track.js` | The course as plain data. |
+| `src/render.js` | Canvas drawing and the camera. |
+| `src/share.js` | Packing a car into a URL, and getting it back out. |
+| `src/main.js` | The DOM, the render loop, and the wiring between them. |
+
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) has the full map and the decisions behind it,
+[`docs/DESIGN.md`](docs/DESIGN.md) covers the visual direction, and [`docs/VISION.md`](docs/VISION.md)
+and [`docs/BACKLOG.md`](docs/BACKLOG.md) cover the scope.
+
+## Stack
+
+- **JavaScript**, vanilla ES modules. No framework: this is a simulation and a canvas, not a
+  component-heavy UI.
+- **[Matter.js](https://brm.io/matter-js/)** for 2D rigid-body physics.
+- **Canvas 2D** for rendering.
+- Static build, zero backend. It deploys to any static host.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
+
+More of Charlie's projects → https://apps.charliekrug.com
