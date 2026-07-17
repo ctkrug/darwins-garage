@@ -177,6 +177,8 @@ body {
   font-family: var(--font-ui);
   font-size: 0.95rem;
   font-weight: 600;
+  /* .btn also dresses anchors (the GitHub CTA), which arrive underlined. */
+  text-decoration: none;
   cursor: pointer;
   box-shadow: var(--shadow-stamp-sm);
   transition:
@@ -770,6 +772,106 @@ body {
 
 .chip.is-best .chip__score {
   color: #8a6a00;
+}
+
+/* ---------- the write-up below the app ---------- */
+
+.prose {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface-1);
+  border: 2px solid rgba(43, 38, 32, 0.28);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-stamp);
+}
+
+/* Two columns on desktop: the explainer reads down the left, the FAQ down the
+   right. One 68ch column would leave half the plate empty. */
+.prose__body {
+  display: grid;
+  gap: 0 var(--space-5);
+  grid-template-columns: 1fr;
+}
+
+.prose__col {
+  max-width: 62ch;
+  min-width: 0;
+}
+
+.prose__title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2.2vw, 1.6rem);
+  line-height: 1.2;
+  color: var(--surface-2);
+}
+
+.prose h3 {
+  margin: var(--space-4) 0 var(--space-1);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.prose h4 {
+  margin: var(--space-3) 0 var(--space-1);
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--surface-2);
+}
+
+.prose p {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.prose__list {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-3);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.prose__list li {
+  margin-bottom: var(--space-1);
+}
+
+.prose__list strong {
+  color: var(--text);
+}
+
+/* The FAQ heading answers a different job to the operator heading above it:
+   mark it as a divider rather than another rust-orange run-in. */
+.prose__faq-title {
+  padding-top: var(--space-3);
+  border-top: 2px solid rgba(43, 38, 32, 0.2);
+  color: var(--surface-2);
+}
+
+.prose__cta {
+  margin-top: var(--space-4);
+}
+
+.btn--cta {
+  font-size: 1rem;
+  padding: 14px var(--space-3);
+}
+
+@media (min-width: 1000px) {
+  .prose__body {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Side by side, the FAQ opens its own column and no longer needs the rule
+     that divides it from the operators list in the stacked layout. */
+  .prose__faq-title {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
 }
 
 .colophon {

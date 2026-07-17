@@ -7,10 +7,17 @@
     <meta name="color-scheme" content="light" />
     <meta
       name="description"
-      content="Watch a population of randomly-shaped vehicles evolve into fast, working cars via a real genetic algorithm and live 2D physics."
+      content="A genetic algorithm car evolution simulator: watch 24 random scrap heaps breed, mutate, and teach themselves to climb a hill. Free, in your browser, no plugin."
     />
     <meta name="theme-color" content="#2b2620" />
-    <title>Darwin's Garage — evolve a car out of scrap</title>
+    <title>Darwin's Garage — evolve a car out of scrap in your browser</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Darwin's Garage — evolve a car out of scrap in your browser" />
+    <meta
+      property="og:description"
+      content="A genetic algorithm car evolution simulator: watch 24 random scrap heaps breed, mutate, and teach themselves to climb a hill. Free, in your browser, no plugin."
+    />
 
     <!-- Favicon drawn in code: a safety-yellow gear on rust-orange, matching the
          wordmark's gear glyph. No binary asset, no default globe. -->
@@ -54,7 +61,7 @@
           </span>
         </h1>
         <p class="tagline">
-          Twenty-four piles of scrap. No design, no plan — just selection, crossover, and
+          Twenty-four piles of scrap, no design and no plan. Just selection, crossover, and
           mutation. Drag the generation slider and watch junk teach itself to climb.
         </p>
         <div class="masthead__tools">
@@ -179,6 +186,99 @@
           <p class="floor__hint" id="floor-hint">Every car in this generation. Tap one to watch its run.</p>
         </div>
         <div id="population" class="floor__grid"></div>
+      </section>
+
+      <section class="prose" aria-labelledby="about-title">
+        <div class="prose__body">
+          <div class="prose__col">
+            <h2 id="about-title" class="prose__title">Evolve a car out of scrap, in your browser</h2>
+            <p>
+            Darwin's Garage is a genetic algorithm car evolution simulator. It opens with 24
+            vehicles built out of random numbers: a polygon chassis of five to eight vertices,
+            wheels bolted to random corners at random radii, each wheel with its own torque.
+            Nobody designed any of them, and most of generation 0 tips over inside a few metres.
+          </p>
+          <p>
+            Every car then drives the same hill course inside a Matter.js physics simulation, and
+            the distance it covers before it flips, stalls, or runs out of time becomes its
+            fitness. Tournament selection picks the parents, crossover splices two chassis into a
+            child, mutation nudges the wheels, and the next generation rolls out. Forty
+            generations later the best car usually clears the full 720 metres. Nobody drew that
+            shape. Selection found it.
+          </p>
+
+          <h3>What the three operators do</h3>
+          <ul class="prose__list">
+            <li>
+              <strong>Selection</strong> picks parents by running small tournaments, so a mediocre
+              car still gets an occasional shot and the population does not collapse onto one
+              shape by generation 3.
+            </li>
+            <li>
+              <strong>Crossover</strong> cuts two parent chassis apart and splices the halves,
+              which is where genuinely new silhouettes come from.
+            </li>
+            <li>
+              <strong>Mutation</strong> jitters wheel radius, wheel position, and torque by small
+              amounts. Set it too high and evolution never settles; too low and it stalls on the
+              first hill.
+            </li>
+          </ul>
+          <p>
+            The fitness curve in the HUD is the honest record. The yellow line is the best car of
+            each generation and the grey line is the population average. Once the two converge,
+            evolution has run out of ideas.
+          </p>
+          </div>
+
+          <div class="prose__col">
+          <h3 class="prose__faq-title">Questions</h3>
+
+          <h4>Is this like BoxCar2D?</h4>
+          <p>
+            Same experiment, and it exists because BoxCar2D was a Flash app and browsers dropped
+            Flash at the end of 2020. Darwin's Garage runs in plain JavaScript, so there is no
+            plugin and nothing to install. What is different here: you can scrub back through
+            every generation, watch any individual car instead of only the leader, and send a car
+            to someone as a link.
+          </p>
+
+          <h4>What is a genetic algorithm car evolution simulator?</h4>
+          <p>
+            A program that breeds vehicles instead of designing them. You define what good means
+            (here it is distance along a hill), generate random candidates, keep the ones that
+            score well, mix and mutate them, and repeat. Cars make the idea legible, because the
+            fitness function plays out in physics you can watch rather than sitting in a number.
+          </p>
+
+          <h4>Can I evolve a car on my phone?</h4>
+          <p>
+            Yes. The simulation runs on your device, the layout stacks into one column, and the
+            controls are sized for thumbs. It is 40 generations of real physics, so an older phone
+            takes longer to fill the slider, but it fills.
+          </p>
+
+          <h4>Is it really evolving, or just picking random winners?</h4>
+          <p>
+            Watch the fitness curve. Generation 0 averages a handful of metres. By generation 20
+            the best car is usually finishing the course. Random search would give you a flat line
+            with noise on it, not a staircase.
+          </p>
+
+          <h4>Can I share a car I evolved?</h4>
+          <p>
+            Every car has a share button that writes its genome into the URL. There is no server
+            and no database row; the link itself carries the car. Open it and you get that exact
+            vehicle on that exact track, because the physics is seeded and deterministic.
+          </p>
+
+          <p class="prose__cta">
+            <a class="btn btn--primary btn--cta" href="https://github.com/ctkrug/darwins-garage">
+              View the source on GitHub
+            </a>
+          </p>
+          </div>
+        </div>
       </section>
 
       <footer class="colophon">
