@@ -10,6 +10,7 @@ import { createRenderer, cameraTarget, PALETTE } from './render.js';
 import { chassisOutline, wheelAnchors } from './car.js';
 import { createAudio } from './audio.js';
 import { readShare, shareUrl, SHARE_PARAM } from './share.js';
+import { spawnConfetti, stepConfetti } from './confetti.js';
 
 const el = (id) => document.getElementById(id);
 
@@ -62,6 +63,7 @@ const state = {
   speed: 1,
   frameTime: 0,
   bestEverFitness: -1,
+  confetti: [],
   guest: null, // a car opened from a share link
   announcedFinish: false,
   announcedFail: false,
@@ -188,6 +190,18 @@ function shakeHud() {
   hud.classList.remove('is-shaking');
   void hud.offsetWidth;
   hud.classList.add('is-shaking');
+}
+
+/** The win celebration for a new best-ever fitness: gold flash + confetti. */
+function celebrateBestEver() {
+  if (reducedMotion) return;
+  const hud = document.querySelector('.hud');
+  hud.classList.remove('is-celebrating');
+  void hud.offsetWidth;
+  hud.classList.add('is-celebrating');
+  // Thrown from the top-right of the viewport, which sits beside the HUD.
+  const { width } = renderer.size;
+  state.confetti.push(...spawnConfetti(width - 40, 40, { count: 32 }));
 }
 
 function showVerdict(text, tone) {
@@ -348,6 +362,11 @@ function frame(now) {
   renderer.clear();
   renderer.drawBayMarks();
   renderer.drawTrack(track);
+
+  if (state.confetti.length > 0) {
+    state.confetti = stepConfetti(state.confetti, dt);
+    renderer.drawConfetti(state.confetti);
+  }
 
   const playback = state.playback;
   if (!playback) {
@@ -602,6 +621,7 @@ async function boot() {
         if (improved) {
           popStat(dom.statBestEver);
           audio.fanfare();
+          celebrateBestEver();
         }
       }
       renderHallOfFame(best);
