@@ -145,10 +145,18 @@
         </div>
 
         <div class="console__buttons">
-          <button id="play" class="btn btn--primary" type="button">
-            <span id="play-glyph" aria-hidden="true">▶</span>
-            <span id="play-label">Replay</span>
-          </button>
+          <div class="transport" role="group" aria-label="Frame stepping">
+            <button id="step-back" class="btn btn--icon" type="button" aria-label="Step back one frame">
+              <span aria-hidden="true">⏮</span>
+            </button>
+            <button id="play" class="btn btn--primary" type="button">
+              <span id="play-glyph" aria-hidden="true">▶</span>
+              <span id="play-label">Replay</span>
+            </button>
+            <button id="step-forward" class="btn btn--icon" type="button" aria-label="Step forward one frame">
+              <span aria-hidden="true">⏭</span>
+            </button>
+          </div>
           <div class="speed" role="group" aria-label="Playback speed">
             <button class="btn btn--speed" type="button" data-speed="0.5">0.5×</button>
             <button class="btn btn--speed is-active" type="button" data-speed="1" aria-pressed="true">1×</button>
