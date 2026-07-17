@@ -419,6 +419,97 @@ body {
   }
 }
 
+/* The hall of fame: the best-ever car, pinned so it survives scrubbing away
+   from it, with its own share button (D5's "win celebration" spec). */
+.hof {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(242, 234, 216, 0.12);
+}
+
+.hof__row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.hof__card {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 2px solid var(--accent-support);
+  border-radius: var(--radius);
+  background: rgba(232, 180, 0, 0.14);
+  color: var(--text-on-dark);
+  cursor: pointer;
+  transition:
+    transform var(--t-ui) var(--ease),
+    box-shadow var(--t-ui) var(--ease);
+}
+
+.hof__card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-stamp-sm);
+}
+
+.hof__card:active {
+  transform: translateY(0);
+}
+
+.hof__card:focus-visible {
+  outline: 3px solid var(--accent-support);
+  outline-offset: 2px;
+}
+
+.hof__canvas {
+  flex: none;
+  width: 48px;
+  height: 36px;
+}
+
+.hof__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.hof__fitness {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--accent-support);
+}
+
+.hof__gen {
+  font-size: 0.68rem;
+  color: #a99e88;
+}
+
+.hof__share {
+  flex: none;
+}
+
+.hof__empty {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #a99e88;
+}
+
+/* Buttons default to display:flex, which — at equal specificity — would
+   otherwise beat the UA [hidden] rule and stay visible (see .boot[hidden]). */
+.hof__card[hidden],
+.hof__share[hidden] {
+  display: none;
+}
+
 .graph {
   margin-top: auto;
   padding-top: var(--space-1);
@@ -695,6 +786,11 @@ body {
   .stat {
     flex: 1 1 auto;
     min-width: 84px;
+    border-bottom: none;
+  }
+
+  .hof {
+    flex: 1 1 100%;
     border-bottom: none;
   }
 

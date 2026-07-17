@@ -94,6 +94,31 @@
             <span class="stat__label">Best ever</span>
             <output id="stat-best-ever" class="stat__value">—</output>
           </div>
+
+          <div class="hof" aria-label="Hall of fame: the best car run so far">
+            <span class="stat__label">Hall of fame</span>
+            <div class="hof__row">
+              <button id="hof-card" class="hof__card" type="button" hidden>
+                <canvas id="hof-canvas" class="hof__canvas" aria-hidden="true"></canvas>
+                <span class="hof__meta">
+                  <span class="sr-only">Best-ever car,</span>
+                  <span id="hof-fitness" class="hof__fitness"></span>
+                  <span id="hof-gen" class="hof__gen"></span>
+                </span>
+              </button>
+              <button
+                id="hof-share"
+                class="btn btn--icon hof__share"
+                type="button"
+                hidden
+                aria-label="Share the hall-of-fame car"
+              >
+                <span aria-hidden="true">🔗</span>
+              </button>
+            </div>
+            <p id="hof-empty" class="hof__empty">No best-ever car yet — keep evolving.</p>
+          </div>
+
           <div class="graph">
             <span class="stat__label">Fitness curve</span>
             <canvas id="curve" height="72"></canvas>
