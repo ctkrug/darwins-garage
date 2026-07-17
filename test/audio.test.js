@@ -155,6 +155,16 @@ test('a throwing AudioContext does not take the app down', () => {
   assert.doesNotThrow(() => audio.thud());
 });
 
+test('createAudio works with no storage option, as main.js actually calls it', () => {
+  // Every other test injects a fake storage, so the real default — used on
+  // every page boot — had no coverage. There is no browser localStorage in
+  // this test environment, so this also exercises the in-memory fallback.
+  const audio = createAudio({ contextClass: fakeContext().Ctx });
+  assert.equal(audio.muted, false);
+  assert.doesNotThrow(() => audio.toggleMute());
+  assert.equal(audio.muted, true);
+});
+
 test('a throwing storage falls back to memory instead of crashing', () => {
   const hostile = {
     getItem() {
