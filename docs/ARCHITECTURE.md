@@ -36,10 +36,10 @@ Nothing below `main.js` touches the DOM. Nothing above `car.js` touches Matter.j
 | `src/simulate.js` | Runs one genome against one track. `createSimulation` is a **resumable stepper**; `simulateGenome` runs it to completion. Fitness = max horizontal distance reached. |
 | `src/evolution.js` | Tournament selection, crossover, mutation. Pure data transforms; no physics. |
 | `src/history.js` | The run loop. Keeps **every** generation (the slider replays history, so history is the product). `runAllAsync` slices work across physics ticks to keep the page responsive. |
-| `src/render.js` | Canvas drawing + camera. Reads state, paints it, advances nothing. |
+| `src/render.js` | Canvas drawing + camera. Reads state, paints it, advances nothing. `viewScale` caps both the world width and height the viewport may show and takes whichever binds, so a car reads at the same fraction of the frame on a phone as on a desktop. |
 | `src/confetti.js` | Pure particle model (spawn/step) for the best-ever celebration burst. Decorative UI, so `Math.random` is fine here — it never touches the physics/RNG path. |
 | `src/audio.js` | WebAudio SFX synthesized in code. Zero audio files. |
-| `src/share.js` | Encodes `{genome, generation, trackId}` into a URL param. `decodeShare` returns a result object and never throws. |
+| `src/share.js` | Encodes `{genome, generation, trackId}` into a URL param, with an FNV-1a checksum on the tail — without one, most truncations still parse and hand back a *different* car. `decodeShare` returns a result object and never throws. |
 | `src/main.js` | The seam: owns the DOM, the rAF loop, and the run. |
 | `src/style.css` | The scrapyard-workshop tokens from `docs/DESIGN.md`. |
 
@@ -98,11 +98,12 @@ npm install
 npm run dev      # vite dev server
 npm test         # node --test; pure logic + physics, no browser needed
 npm run lint     # eslint (browser globals for src/, node globals for test/)
-npm run build    # -> dist/, static and base-path-relative
-npm run preview  # serve the built dist/
+npm run build    # -> site/, static and base-path-relative
+npm run preview  # serve the built site/
 ```
 
-`vite.config.js` sets `base: './'` and `index.html` carries `<base href="./">`
+`vite.config.js` builds to `site/`, which is the directory the publisher serves
+verbatim. It sets `base: './'` and `index.html` carries `<base href="./">`
 because the app is served from a **subpath**
 (`apps.charliekrug.com/darwins-garage/`). Any leading-slash asset path would
 404 there.
