@@ -22,7 +22,7 @@ export function encodeShare({ genome, generation = 0, trackId = DEFAULT_TRACK_ID
   if (!Number.isInteger(generation) || generation < 0) {
     throw new RangeError(`encodeShare: generation must be a non-negative integer, got ${generation}`);
   }
-  const payload = [
+  const body = [
     FORMAT_VERSION,
     generation,
     trackId,
@@ -31,7 +31,7 @@ export function encodeShare({ genome, generation = 0, trackId = DEFAULT_TRACK_ID
     // any harder would quantize the drive away.
     safe.wheels.map((w) => `${w.vertexIndex},${Math.round(w.radius)},${w.torque.toFixed(3)}`).join(';'),
   ].join('|');
-  return toBase64Url(payload);
+  return toBase64Url(`${body}|${checksum(body)}`);
 }
 
 /**
@@ -52,7 +52,14 @@ export function decodeShare(encoded) {
   }
 
   const parts = payload.split('|');
-  if (parts.length !== 5) {
+  if (parts.length !== 6) {
+    return fail("This share link isn't readable — it may have been cut short when copied.");
+  }
+  // Verify the tail before trusting any field. Dropping characters off the end
+  // of a link usually still parses: a four-wheel car quietly arrives as a
+  // three-wheel one, which is worse than refusing it.
+  const body = parts.slice(0, 5).join('|');
+  if (parts[5] !== checksum(body)) {
     return fail("This share link isn't readable — it may have been cut short when copied.");
   }
   const [rawVersion, rawGeneration, trackId, rawChassis, rawWheels] = parts;
@@ -106,6 +113,21 @@ export function readShare(href) {
 
 function fail(error) {
   return { ok: false, error };
+}
+
+/**
+ * FNV-1a over the payload body, in base36. This guards against a link that lost
+ * its tail between a chat client and the address bar, not against tampering:
+ * anyone can recompute it, and a hand-built genome still has to clear
+ * isValidGenome below.
+ */
+function checksum(body) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < body.length; i += 1) {
+    hash ^= body.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(36);
 }
 
 // btoa/atob only exist in the browser and only speak latin1; Buffer only exists
