@@ -37,6 +37,7 @@ Nothing below `main.js` touches the DOM. Nothing above `car.js` touches Matter.j
 | `src/evolution.js` | Tournament selection, crossover, mutation. Pure data transforms; no physics. |
 | `src/history.js` | The run loop. Keeps **every** generation (the slider replays history, so history is the product). `runAllAsync` slices work across physics ticks to keep the page responsive. |
 | `src/render.js` | Canvas drawing + camera. Reads state, paints it, advances nothing. |
+| `src/confetti.js` | Pure particle model (spawn/step) for the best-ever celebration burst. Decorative UI, so `Math.random` is fine here — it never touches the physics/RNG path. |
 | `src/audio.js` | WebAudio SFX synthesized in code. Zero audio files. |
 | `src/share.js` | Encodes `{genome, generation, trackId}` into a URL param. `decodeShare` returns a result object and never throws. |
 | `src/main.js` | The seam: owns the DOM, the rAF loop, and the run. |
