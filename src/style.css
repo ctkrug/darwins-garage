@@ -206,7 +206,10 @@ body {
 
 .btn--primary {
   --btn-bg: var(--accent);
-  --btn-fg: #fff6ec;
+  /* #fff6ec on --accent reads 3.84:1 — under WCAG AA's 4.5:1 for this button's
+     15px/600-weight label. Near-black text clears 4.64:1 against both the
+     resting and hover background. */
+  --btn-fg: #140f0b;
   min-width: 130px;
 }
 
