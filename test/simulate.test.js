@@ -185,6 +185,18 @@ test('step(0) does not advance the simulation', () => {
   assert.equal(sim.result.ticks, 0);
 });
 
+test('a NaN chassis position is caught and reported as exploded, not left to poison fitness', () => {
+  // No genome that survives normalizeGenome's validation is known to drive the
+  // solver into NaN, which makes this guard otherwise untested — force the
+  // condition directly to confirm the safety net itself still works.
+  const sim = createSimulation(goodCar(), track);
+  sim.car.chassis.position.x = NaN;
+  sim.step(1);
+  assert.equal(sim.result.failReason, 'exploded');
+  assert.equal(sim.result.failed, true);
+  assert.equal(sim.result.fitness, 0);
+});
+
 test('buildTerrain produces one static body per track segment', () => {
   const bodies = buildTerrain(track);
   assert.equal(bodies.length, track.points.length - 1);
