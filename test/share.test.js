@@ -100,6 +100,20 @@ test('decodeShare rejects a payload describing a structurally impossible car', (
   assert.match(result.error, /couldn't be built/);
 });
 
+test('decodeShare rejects a payload describing a degenerate, zero-area chassis', () => {
+  // A hand-crafted link can put every chassis vertex on one line without
+  // tripping the count or radius checks; it must still fail to decode rather
+  // than handing back a genome that draws as invisible everywhere.
+  const payload = Buffer.from('1|0|default-hill|20,0;30,0;40,0;50,0;60,0|0,15,0.1;1,15,0.1', 'utf8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  const result = decodeShare(payload);
+  assert.equal(result.ok, false);
+  assert.match(result.error, /couldn't be built/);
+});
+
 test('decodeShare refuses a future format version', () => {
   const payload = Buffer.from('99|0|default-hill|0,0|0,0', 'utf8')
     .toString('base64')
