@@ -53,16 +53,14 @@ is the wow moment and must land before anything else in this backlog.
 
 ## Epic 2 — Population viz, playback & sharing
 
-- [ ] **2.1 Population overview renderer** — *partial: silhouettes and tap-to-select ship; the
-  hall-of-fame strip does not (best-ever is only a HUD readout).*
+- [x] **2.1 Population overview renderer**
   - Selecting a generation renders every car in that generation's population as a silhouette on
     the workshop-floor canvas.
   - Tapping/clicking a car selects it and switches the view to single-car replay.
   - A "hall of fame" strip shows the best-ever car across all generations run so far, and
     updates when a new best-ever fitness appears.
 
-- [ ] **2.2 Single-car replay & playback controls** — *partial: play/pause, the 0.5x-4x speed
-  control, and the 120ms camera tween ship; frame-by-frame stepping does not.*
+- [x] **2.2 Single-car replay & playback controls**
   - Play/pause/step controls scrub a selected car's run frame-by-frame using the deterministic
     simulation from 1.3.
   - A playback-speed control (0.5x/1x/2x/4x) changes replay speed without changing the physics
@@ -77,9 +75,7 @@ is the wow moment and must land before anything else in this backlog.
   - An invalid or corrupted share parameter renders an inline error state instead of crashing
     the app.
 
-- [ ] **2.4 Juice pass: sound & win celebration** — *partial: all five synth SFX and the
-  persisted mute ship; a new best-ever pops the stat and plays the fanfare, but the confetti
-  celebration does not exist yet.*
+- [x] **2.4 Juice pass: sound & win celebration**
   - All five synth SFX from `docs/DESIGN.md` (tick, clatter, thud, chime, fanfare) fire on their
     respective triggers using WebAudio oscillators/noise — zero audio files.
   - The mute toggle persists across reloads via `localStorage` and silences all SFX immediately
@@ -120,8 +116,8 @@ is the wow moment and must land before anything else in this backlog.
 
 ---
 
-**Total: 14 stories across 3 epics.** 8 done — all of epic 1 (the engine and the wow moment),
-plus share links and the responsive/mobile pass. 3 partially done (2.1, 2.2, 2.4 — see notes).
+**Total: 14 stories across 3 epics.** 11 done — all of epic 1 (the engine and the wow moment)
+and all of epic 2 (population overview, replay/stepping, sharing, juice, and the mobile pass).
 Epic 3 (the track editor) is untouched.
 
 A story is only checked off when every one of its acceptance criteria verifiably holds; the
