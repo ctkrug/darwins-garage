@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import { createRng } from '../src/rng.js';
 import { createRandomGenome } from '../src/genome.js';
 import { createDefaultTrack, finishX } from '../src/track.js';
-import { simulateGenome, replayGenome, createSimulation, buildTerrain, SIM_DEFAULTS } from '../src/simulate.js';
+import {
+  simulateGenome,
+  replayGenome,
+  createSimulation,
+  buildTerrain,
+  reachedGoal,
+  SIM_DEFAULTS,
+} from '../src/simulate.js';
 import { buildCar, hasNaNPosition, chassisOutline, wheelAnchors } from '../src/car.js';
 
 const track = createDefaultTrack();
@@ -83,6 +90,14 @@ test('simulateGenome marks a car that reaches the finish as finished', () => {
     assert.ok(result.fitness >= finishX(track) - 200);
     assert.equal(result.failed, false);
   }
+});
+
+test('reachedGoal treats landing exactly on the finish line as finished', () => {
+  // Physics almost never lands a chassis on the exact float boundary, so this
+  // condition is otherwise only ever exercised incidentally — pin it directly.
+  assert.equal(reachedGoal(100, 100), true);
+  assert.equal(reachedGoal(99.999999, 100), false);
+  assert.equal(reachedGoal(100.000001, 100), true);
 });
 
 test('simulateGenome stalls out a car that cannot move', () => {

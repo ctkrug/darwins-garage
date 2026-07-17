@@ -88,7 +88,7 @@ export function createSimulation(genome, track, options = {}) {
       finish('flipped', true);
       return;
     }
-    if (car.chassis.position.x >= goal) {
+    if (reachedGoal(car.chassis.position.x, goal)) {
       state.finished = true;
       state.done = true;
       return;
@@ -174,6 +174,13 @@ export function buildTerrain(track, options = {}) {
       friction: 1,
     });
   });
+}
+
+// Landing exactly on the line counts as finishing, not falling short — a
+// standalone predicate so the boundary is a direct unit test rather than
+// something only ever exercised incidentally by where physics happens to land.
+export function reachedGoal(x, goal) {
+  return x >= goal;
 }
 
 function captureFrame(car, tick) {
