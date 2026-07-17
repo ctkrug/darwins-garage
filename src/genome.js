@@ -102,6 +102,9 @@ export function normalizeGenome(genome) {
     );
   }
   const nextChassis = points.slice(0, GENOME_LIMITS.maxVertices);
+  if (isDegenerate(nextChassis)) {
+    throw new RangeError('normalizeGenome: chassis vertices must not all fall on one line');
+  }
 
   const nextWheels = wheels
     .filter((w) => w && Number.isFinite(w.radius) && Number.isFinite(w.vertexIndex))
@@ -144,6 +147,30 @@ export function cloneGenome(genome) {
     chassis: genome.chassis.map((p) => ({ x: p.x, y: p.y })),
     wheels: genome.wheels.map((w) => ({ ...w })),
   };
+}
+
+// A chassis that hulls to zero area (every vertex on one line, or all
+// coincident) divides by zero inside Matter's Vertices.centre downstream,
+// which is what produces NaN outlines instead of a build failure. Chassis
+// coordinates are always whole pixels by the time this runs, so any
+// non-degenerate polygon has a cross product of at least 1 — no tolerance
+// needed for float noise.
+function isDegenerate(points) {
+  const [origin] = points;
+  let direction = null;
+  for (const point of points.slice(1)) {
+    const candidate = { x: point.x - origin.x, y: point.y - origin.y };
+    if (candidate.x !== 0 || candidate.y !== 0) {
+      direction = candidate;
+      break;
+    }
+  }
+  if (!direction) return true;
+  return points.every((point) => {
+    const dx = point.x - origin.x;
+    const dy = point.y - origin.y;
+    return direction.x * dy - direction.y * dx === 0;
+  });
 }
 
 function clampVertex(point) {
