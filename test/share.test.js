@@ -10,6 +10,25 @@ import { encodeShare, decodeShare, shareUrl, readShare, SHARE_PARAM } from '../s
 const track = createDefaultTrack();
 const genomeFor = (seed) => createRandomGenome(createRng(seed));
 
+/**
+ * Build a link by hand, signed the way share.js signs one, for the payloads the
+ * encoder would refuse to produce. FNV-1a is recomputed here rather than
+ * imported so the wire format is pinned from the outside: a change to either
+ * side has to be deliberate.
+ */
+const signedLink = (body) => {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < body.length; i += 1) {
+    hash ^= body.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return Buffer.from(`${body}|${hash.toString(36)}`, 'utf8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+};
+
 test('a share round-trips the genome, generation, and track', () => {
   const run = { genome: genomeFor(3), generation: 17, trackId: DEFAULT_TRACK_ID };
   const decoded = decodeShare(encodeShare(run));
@@ -88,14 +107,27 @@ test('decodeShare rejects non-string input without throwing', () => {
   }
 });
 
+test('decodeShare refuses every truncation of a real link', () => {
+  // The regression this guards: without a checksum most truncations still
+  // parsed, so a four-wheel car silently arrived as a three-wheel one and the
+  // "replays the exact same car" promise quietly broke.
+  const link = encodeShare({ genome: genomeFor(7), generation: 3 });
+  for (let cut = 1; cut < link.length; cut += 1) {
+    const result = decodeShare(link.slice(0, link.length - cut));
+    assert.equal(result.ok, false, `a link cut short by ${cut} chars was accepted`);
+  }
+});
+
+test('decodeShare rejects a link whose body was edited under a stale checksum', () => {
+  const body = '1|0|default-hill|0,0;10,0;20,0;30,0;40,0|0,20,0.05;1,20,0.05';
+  const tampered = signedLink(body).replace(/.$/, (c) => (c === 'A' ? 'B' : 'A'));
+  const result = decodeShare(tampered);
+  assert.equal(result.ok, false);
+});
+
 test('decodeShare rejects a payload describing a structurally impossible car', () => {
   // A well-formed link whose genome has too few wheels to build.
-  const payload = Buffer.from('1|0|default-hill|0,0;10,0;20,0;30,0;40,0|0,20,0.05', 'utf8')
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-  const result = decodeShare(payload);
+  const result = decodeShare(signedLink('1|0|default-hill|0,0;10,0;20,0;30,0;40,0|0,20,0.05'));
   assert.equal(result.ok, false);
   assert.match(result.error, /couldn't be built/);
 });
@@ -104,12 +136,7 @@ test('decodeShare rejects a payload describing a degenerate, zero-area chassis',
   // A hand-crafted link can put every chassis vertex on one line without
   // tripping the count or radius checks; it must still fail to decode rather
   // than handing back a genome that draws as invisible everywhere.
-  const payload = Buffer.from('1|0|default-hill|20,0;30,0;40,0;50,0;60,0|0,15,0.1;1,15,0.1', 'utf8')
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-  const result = decodeShare(payload);
+  const result = decodeShare(signedLink('1|0|default-hill|20,0;30,0;40,0;50,0;60,0|0,15,0.1;1,15,0.1'));
   assert.equal(result.ok, false);
   assert.match(result.error, /couldn't be built/);
 });
@@ -118,11 +145,7 @@ test('decodeShare rejects a payload with a negative or non-integer generation', 
   // encodeShare guards this on the way out, but a hand-edited link skips the
   // encoder entirely, so decodeShare needs its own floor on the raw field.
   const encode = (generation) =>
-    Buffer.from(`1|${generation}|default-hill|0,0;10,0;20,0;30,0;40,0|0,20,0.05;1,20,0.05`, 'utf8')
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
+    signedLink(`1|${generation}|default-hill|0,0;10,0;20,0;30,0;40,0|0,20,0.05;1,20,0.05`);
   for (const bad of ['-1', '1.5', 'NaN', 'x']) {
     const result = decodeShare(encode(bad));
     assert.equal(result.ok, false, `expected generation ${bad} to be rejected`);
@@ -131,12 +154,7 @@ test('decodeShare rejects a payload with a negative or non-integer generation', 
 });
 
 test('decodeShare refuses a future format version', () => {
-  const payload = Buffer.from('99|0|default-hill|0,0|0,0', 'utf8')
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-  const result = decodeShare(payload);
+  const result = decodeShare(signedLink('99|0|default-hill|0,0|0,0'));
   assert.equal(result.ok, false);
   assert.match(result.error, /format/);
 });
