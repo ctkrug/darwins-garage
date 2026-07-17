@@ -25,6 +25,8 @@ const dom = {
   play: el('play'),
   playGlyph: el('play-glyph'),
   playLabel: el('play-label'),
+  stepBack: el('step-back'),
+  stepForward: el('step-forward'),
   share: el('share'),
   hofCard: el('hof-card'),
   hofCanvas: el('hof-canvas'),
@@ -418,6 +420,15 @@ function syncPlayButton() {
   dom.playLabel.textContent = state.playing ? 'Pause' : atEnd ? 'Replay' : 'Play';
 }
 
+/** Pause playback and move exactly one recorded frame, clamped to the run. */
+function stepFrame(delta) {
+  if (!state.playback || state.playback.frames.length === 0) return;
+  state.playing = false;
+  const max = state.playback.frames.length - 1;
+  state.playback.tick = Math.max(0, Math.min(max, Math.floor(state.playback.tick) + delta));
+  syncPlayButton();
+}
+
 function buildShareUrl(genome, generation) {
   return shareUrl(
     { genome, generation, trackId: DEFAULT_TRACK_ID },
@@ -489,6 +500,16 @@ function wireControls() {
     setTimeout(() => {
       dom.share.innerHTML = '<span aria-hidden="true">🔗</span> Share this car';
     }, 2000);
+  });
+
+  dom.stepBack.addEventListener('click', () => {
+    audio.unlock();
+    stepFrame(-1);
+  });
+
+  dom.stepForward.addEventListener('click', () => {
+    audio.unlock();
+    stepFrame(1);
   });
 
   dom.hofCard.addEventListener('click', () => {
