@@ -126,6 +126,21 @@ test('the async runner reports each generation as it lands', async () => {
   assert.deepEqual(seen, [0, 1]);
 });
 
+test('the default yield falls back to setTimeout where MessageChannel is unavailable', async () => {
+  // Every other async test injects its own yieldControl, so the runner's real
+  // default — the branch older/restricted environments actually take — never
+  // otherwise runs.
+  const real = globalThis.MessageChannel;
+  globalThis.MessageChannel = undefined;
+  try {
+    const run = smallRun({ generations: 1 });
+    await runAllAsync(run);
+    assert.equal(run.history.length, 1);
+  } finally {
+    globalThis.MessageChannel = real;
+  }
+});
+
 test('the async runner stops early when its signal aborts', async () => {
   const run = smallRun({ generations: 5 });
   const signal = { aborted: false };
