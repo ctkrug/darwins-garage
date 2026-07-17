@@ -9,7 +9,9 @@
   --surface-2-lift: #3a332b;
   --text: #241f19;
   --text-on-dark: #f2ead8;
-  --text-muted: #6b6152;
+  /* #6b6152 read 4.63:1 on --bg (passing) but only 3.86:1 on --surface-1
+     (failing WCAG AA) — this darker value clears 4.5:1 on both. */
+  --text-muted: #544c40;
   --accent: #d5541a;
   --accent-bright: #e2673a;
   --accent-support: #e8b400;
