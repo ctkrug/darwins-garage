@@ -190,3 +190,23 @@ test('a bred genome also survives a round trip unchanged', () => {
     assert.deepEqual(decoded.value.genome, genome, `bred genome ${i} did not round-trip`);
   }
 });
+
+test('encoding round-trips through the Buffer fallback, not just btoa/atob', () => {
+  // Node 20 ships global btoa/atob, so every other test exercises only that
+  // branch — the Buffer path this module was written to support (per its own
+  // top-of-file comment) otherwise never actually runs.
+  const realBtoa = globalThis.btoa;
+  const realAtob = globalThis.atob;
+  globalThis.btoa = undefined;
+  globalThis.atob = undefined;
+  try {
+    const genome = genomeFor(7);
+    const decoded = decodeShare(encodeShare({ genome, generation: 3 }));
+    assert.equal(decoded.ok, true);
+    assert.deepEqual(decoded.value.genome, genome);
+    assert.equal(decoded.value.generation, 3);
+  } finally {
+    globalThis.btoa = realBtoa;
+    globalThis.atob = realAtob;
+  }
+});
